@@ -1,0 +1,12 @@
+@startuml
+actor Cliente
+actor Administrador
+
+Cliente --> (Obtener aplicaciones vía web)
+Cliente --> (Obtener aplicaciones vía QR)
+
+Administrador --> Cliente
+Administrador --> (Gestionar endpoints)
+Administrador --> (Gestionar servidor)
+
+@enduml

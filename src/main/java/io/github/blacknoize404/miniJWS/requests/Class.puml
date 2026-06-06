@@ -1,0 +1,34 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+@startuml
+package requests {
+    class Request {
+        +url: String
+        +method: String
+        +headers: Map<String, String>
+        +body: String
+        +send(): Response
+    }
+
+    class Response {
+        +status_code: int
+        +headers: Map<String, String>
+        +body: String
+        +json(): Map<String, Object>
+    }
+
+    class Session {
+        +cookies: Map<String, String>
+        +headers: Map<String, String>
+        +send(request: Request): Response
+    }
+
+    Request --> Response : sends
+    Session --> Request : creates
+    Session --> Response : receives
+}
+
+@enduml
+
+@enduml

@@ -1,0 +1,27 @@
+@startuml
+
+package responses {
+
+    class HttpResponse {
+        +static void writeResponse(final BufferedWriter, final HttpResponse)
+        -Optional<List<String>> readMessage(InputStream)
+        -Optional<HttpRequest> buildRequest(List<String>)
+        -HttpRequest addRequestHeader(List<String>, Builder)
+    }
+
+    class HttpEncoder {
+        -List<String> requestHeaders
+        -Map<String, String> parameters
+
+        +List<String> getRequestHeaders()
+        +Map<String, String> getParameters()
+
+        HttpRequest(List<String> requestHeaders, Map<String, String> parameters)
+
+        class Builder {
+            // Implementación del patrón Builder
+        }
+    }
+}
+
+@enduml

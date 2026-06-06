@@ -1,0 +1,28 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package requests {
+    class HttpDecoder {
+        + static Optional<HttpRequest> decode(final InputStream)
+        - static Optional<List<String>> readMessage(InputStream)
+        - static Optional<HttpRequest> buildRequest(List<String>)
+        - static HttpRequest addRequestHeader(List<String>, Builder)
+    }
+
+    class HttpRequest {
+        - List<String> requestHeaders
+        - Map<String, String> parameters
+
+        + List<String> getRequestHeaders()
+        + Map<String, String> getParameters()
+
+        - HttpRequest(List<String> requestHeaders, Map<String, String> parameters)
+
+        {static} class Builder {
+            // Implementación del patrón Builder
+        }
+
+    }
+}
+
+@enduml
