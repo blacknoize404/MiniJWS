@@ -1,5 +1,8 @@
 # miniStaticServer
 
+![Java 25+](https://img.shields.io/badge/Java-25+-orange?logo=openjdk&logoColor=white)
+![Maven 3.8+](https://img.shields.io/badge/Maven-3.8+-C71A36?logo=apachemaven&logoColor=white)
+
 Servidor de archivos estáticos sobre miniJWS-core con inyección de plantillas y soporte de códigos QR.
 
 ## API

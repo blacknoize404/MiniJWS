@@ -1,5 +1,10 @@
 # miniQR
 
+![Java 25+](https://img.shields.io/badge/Java-25+-orange?logo=openjdk&logoColor=white)
+![Maven 3.8+](https://img.shields.io/badge/Maven-3.8+-C71A36?logo=apachemaven&logoColor=white)
+![ZXing 3.5.3](https://img.shields.io/badge/ZXing-3.5.3-4B8BBE)
+![JFreeSVG 3.4](https://img.shields.io/badge/JFreeSVG-3.4-4B8BBE)
+
 QR code generation module using ZXing and JFreeSVG.
 
 ## API

@@ -1,5 +1,9 @@
 # MiniJWS
 
+![Java 25+](https://img.shields.io/badge/Java-25+-orange?logo=openjdk&logoColor=white)
+![Maven 3.8+](https://img.shields.io/badge/Maven-3.8+-C71A36?logo=apachemaven&logoColor=white)
+![CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey)
+
 A lightweight modular Java HTTP server framework built with Java 25.
 
 This project started during my second year of Computer Engineering as a personal initiative to deeply learn the HTTP protocol, exploring every aspect of the standard through its implementation from scratch.

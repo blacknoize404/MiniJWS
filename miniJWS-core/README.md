@@ -1,5 +1,8 @@
 # miniJWS-core
 
+![Java 25+](https://img.shields.io/badge/Java-25+-orange?logo=openjdk&logoColor=white)
+![Maven 3.8+](https://img.shields.io/badge/Maven-3.8+-C71A36?logo=apachemaven&logoColor=white)
+
 Biblioteca central del servidor HTTP/1.1 para MiniJWS — ligera, modular, sin dependencias (excepto anotaciones JetBrains).
 
 ## Características

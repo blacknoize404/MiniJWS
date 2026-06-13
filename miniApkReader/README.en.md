@@ -1,5 +1,9 @@
 # miniApkReader
 
+![Java 25+](https://img.shields.io/badge/Java-25+-orange?logo=openjdk&logoColor=white)
+![Maven 3.8+](https://img.shields.io/badge/Maven-3.8+-C71A36?logo=apachemaven&logoColor=white)
+![apk-parser 2.6.10](https://img.shields.io/badge/apk--parser-2.6.10-4B8BBE)
+
 Android APK metadata extraction library.
 
 ## API
