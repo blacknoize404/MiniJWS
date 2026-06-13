@@ -120,7 +120,7 @@ Full documentation is available in the [`docs/`](docs/index.md) directory, inclu
 - [API reference](docs/api/)
 - [Getting started guide](docs/guides/getting-started.md)
 - [Configuration](docs/guides/configuration.md)
-- [Deployment](docs/guides/deployme
+- [Deployment](docs/guides/deployment.md)
 
 ## License
 
