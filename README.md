@@ -120,12 +120,8 @@ Full documentation is available in the [`docs/`](docs/index.md) directory, inclu
 - [API reference](docs/api/)
 - [Getting started guide](docs/guides/getting-started.md)
 - [Configuration](docs/guides/configuration.md)
-- [Deployment](docs/guides/deployment.md)
-
-## Bug Reports
-
-See [`bugs/solved/`](bugs/solved/) for documented bugs and their solutions.
+- [Deployment](docs/guides/deployme
 
 ## License
 
-MIT License
+CC-BY-NC-SA 4.0
