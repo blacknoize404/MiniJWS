@@ -1,62 +1,64 @@
 # MiniJWS
 
-A lightweight modular Java HTTP server framework built with Java 25.
+Un framework modular ligero de servidor HTTP en Java construido con Java 25.
 
-## Features
+Este proyecto surgió en mi segundo año de Ingeniería Informática como una iniciativa personal para aprender a fondo el protocolo HTTP, explorando cada aspecto del estándar a través de su implementación desde cero.
 
-- **HTTP/1.1 server** with thread pool concurrency and keep-alive connections
-- **Middleware pipeline** — logging, CORS, gzip, rate limiting, auth
-- **Path parameters** — `/users/:id` style routing
-- **Static file serving** — directory-based with MIME detection
-- **Request body parsing** — JSON, form-urlencoded, plain text
-- **Cookie support** — parse request cookies, set response cookies
-- **Redirect helper** — 301/302 with `HttpResponse.redirect()`
-- **Graceful shutdown** — SIGINT handler for clean stop
-- **Modular architecture** — standalone Maven modules
-- **QR code generation** (SVG/Image) via `miniQR` module
-- **Android APK metadata** extraction via `miniApkReader` module
-- **Static site server** with template injection via `miniStaticServer` module
-- **Comprehensive documentation** in `docs/`
+> **Nota:** Aunque el proyecto está listo para usarse directamente, su documentación también recoge qué clases de Java se emplean y por qué, las decisiones de diseño que se tomaron y los patrones utilizados con su justificación, con el objetivo de que sirva como recurso para que estudiantes vean conceptos universitarios aplicados en un proyecto real.
 
-## Project Structure
+## Características
+
+- **Servidor HTTP/1.1** con concurrencia mediante pool de hilos y conexiones persistentes
+- **Pipeline de middleware** — logging, CORS, gzip, limitación de tasa, autenticación
+- **Parámetros de ruta** — rutas estilo `/usuarios/:id`
+- **Servicio de archivos estáticos** — basado en directorios con detección MIME
+- **Parseo de cuerpo de solicitud** — JSON, form-urlencoded, texto plano
+- **Soporte de cookies** — parsear cookies de solicitud, establecer cookies de respuesta
+- **Ayudante de redirección** — 301/302 con `HttpResponse.redirect()`
+- **Apagado gradual** — manejador SIGINT para detención limpia
+- **Arquitectura modular** — módulos Maven independientes
+- **Generación de códigos QR** (SVG/Imagen) mediante el módulo `miniQR`
+- **Extracción de metadatos de APK Android** mediante el módulo `miniApkReader`
+- **Servidor de sitios estáticos** con inyección de plantillas mediante el módulo `miniStaticServer`
+- **Documentación completa** en `docs/`
+
+## Estructura del Proyecto
 
 ```
 MiniJWS/
-├── miniJWS-core/                # Core HTTP server library
+├── miniJWS-core/                # Biblioteca central del servidor HTTP
 │   └── src/main/java/io/github/blacknoize404/miniJWS/
-│       ├── HttpServer.java        # Main server (thread pool, routing, middleware)
+│       ├── HttpServer.java        # Servidor principal (pool de hilos, rutas, middleware)
 │       ├── primitives/            # HttpMethod, ContentType, Middleware, RequestRunner
 │       ├── requests/              # HttpRequest, HttpDecoder
 │       ├── responses/             # HttpResponse, HttpEncoder
 │       ├── middleware/            # CorsMiddleware, AccessLog, Gzip, RateLimit
 │       ├── handlers/              # StaticFileHandler
 │       ├── headers/               # Header, Field, Parameter parsing
-│       └── content/               # MIME type mappings
-├── miniJWS-demo/                 # Full demo server using all features
-├── miniQR/                       # QR code generation (ZXing + JFreeSVG)
-├── miniStaticServer/             # Static file server (+ QR template injection)
-├── miniApkReader/                # Android APK metadata parser
-├── public/                       # Demo static assets
-├── bugs/                         # Bug reports and solutions
-├── todo/                         # Pending features
-├── docs/                         # Full documentation
-│   ├── index.md                 # Documentation home
-│   ├── architecture.md          # Module architecture & request flow
-│   ├── modules/                 # Per-module documentation
-│   ├── api/                     # API reference
-│   └── guides/                  # Getting started, configuration, deployment
+│       └── content/               # Mapeos de tipos MIME
+├── miniJWS-demo/                 # Servidor de demostración completo
+├── miniQR/                       # Generación de códigos QR (ZXing + JFreeSVG)
+├── miniStaticServer/             # Servidor de archivos estáticos (+ inyección de QR)
+├── miniApkReader/                # Parseador de metadatos de APK Android
+├── public/                       # Recursos estáticos de demostración
+├── docs/                         # Documentación completa
+│   ├── index.md                 # Página principal de documentación
+│   ├── architecture.md          # Arquitectura de módulos y flujo de solicitudes
+│   ├── modules/                 # Documentación por módulo
+│   ├── api/                     # Referencia de API
+│   └── guides/                  # Primeros pasos, configuración, despliegue
 └── README.md
 ```
 
-## Requirements
+## Requisitos
 
 - Java 25+
 - Maven 3.8+
 
-## Building
+## Compilación
 
 ```bash
-# Build modules in dependency order
+# Compilar módulos en orden de dependencias
 mvn clean install -f miniJWS-core/pom.xml
 mvn clean install -f miniJWS-demo/pom.xml
 mvn clean install -f miniQR/pom.xml
@@ -64,7 +66,7 @@ mvn clean install -f miniStaticServer/pom.xml
 mvn clean install -f miniApkReader/pom.xml
 ```
 
-## Quick Start
+## Inicio Rápido
 
 ```java
 HttpServer server = new HttpServer(8080);
@@ -73,12 +75,12 @@ HttpServer server = new HttpServer(8080);
 server.use(new AccessLogMiddleware());
 server.use(new CorsMiddleware().allowOrigin("*"));
 
-// Routes
+// Rutas
 server.addRoute(HttpMethod.GET, "/", req ->
     new HttpResponse.Builder()
         .setStatusCode(200)
         .setContentType(ContentType.HTML)
-        .setBody("<h1>Hello MiniJWS!</h1>")
+        .setBody("<h1>¡Hola MiniJWS!</h1>")
         .build()
 );
 
@@ -86,42 +88,43 @@ server.addRoute(HttpMethod.GET, "/hello/:name", req -> {
     String name = req.getParameters().get("name");
     return new HttpResponse.Builder()
         .setContentType(ContentType.TEXT)
-        .setBody("Hello, " + name + "!")
+        .setBody("Hola, " + name + "!")
         .build();
 });
 
 server.run();
 ```
 
-## Run the Demo
+## Ejecutar la Demo
 
 ```bash
-# Start the full demo server on port 8080
+# Iniciar el servidor de demostración en el puerto 8080
 mvn compile exec:java -f miniJWS-demo/pom.xml
 ```
 
-Then open http://localhost:8080 in your browser.
+Luego abre http://localhost:8080 en tu navegador.
 
-## Modules
+## Módulos
 
-| Module | Description |
+| Módulo | Descripción |
 |--------|-------------|
-| **[miniJWS-core](miniJWS-core/README.md)** | Core HTTP/1.1 server with middleware, routing, path params, static files, cookies, CORS |
-| **[miniJWS-demo](miniJWS-demo/README.md)** | Complete demo server showcasing all features |
-| **[miniQR](miniQR/README.md)** | QR code generation using ZXing with SVG output via JFreeSVG |
-| **[miniStaticServer](miniStaticServer/README.md)** | Static file server with template placeholders and QR code injection |
-| **[miniApkReader](miniApkReader/README.md)** | Android APK metadata extraction (package, version, permissions, features) |
+| **[miniJWS-core](miniJWS-core/README.md)** | Servidor HTTP/1.1 central con middleware, rutas, parámetros, archivos estáticos, cookies, CORS |
+| **[miniJWS-demo](miniJWS-demo/README.md)** | Servidor de demostración completo mostrando todas las funcionalidades |
+| **[miniQR](miniQR/README.md)** | Generación de códigos QR usando ZXing con salida SVG mediante JFreeSVG |
+| **[miniStaticServer](miniStaticServer/README.md)** | Servidor de archivos estáticos con placeholders de plantilla e inyección de QR |
+| **[miniApkReader](miniApkReader/README.md)** | Extracción de metadatos de APK Android (paquete, versión, permisos, características) |
 
-## Documentation
+## Documentación
 
-Full documentation is available in the [`docs/`](docs/index.md) directory, including:
-- [Architecture overview](docs/architecture.md)
-- [Module details](docs/modules/)
-- [API reference](docs/api/)
-- [Getting started guide](docs/guides/getting-started.md)
-- [Configuration](docs/guides/configuration.md)
-- [Deployment](docs/guides/deployment.md)
+La documentación completa está disponible en el directorio [`docs/`](docs/index.md), incluyendo:
+- [Visión general de la arquitectura](docs/architecture.md)
+- [Detalles de módulos](docs/modules/)
+- [Referencia de API](docs/api/)
+- [Guía de primeros pasos](docs/guides/getting-started.md)
+- [Configuración](docs/guides/configuration.md)
+- [Despliegue](docs/guides/deployment.md)
+- [Base de Conocimiento](docs/knowledge/index.md) — patrones usados, decisiones de diseño, clases de Java empleadas y por qué
 
-## License
+## Licencia
 
 CC-BY-NC-SA 4.0

@@ -1,40 +1,40 @@
 # miniApkReader
 
-Android APK metadata extraction library.
+Biblioteca de extracción de metadatos de APK Android.
 
 ## API
 
 ```java
 ApkInfo info = ApkReader.read(Path.of("app.apk"));
-System.out.println("Package: " + info.packageName());
+System.out.println("Paquete: " + info.packageName());
 System.out.println(ApkReader.printInfo(info));
 ```
 
-### ApkInfo Record
+### Record ApkInfo
 
-| Field | Type | Description |
+| Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `packageName` | `String` | e.g. `com.example.app` |
-| `versionName` | `String` | e.g. `1.0.0` |
-| `versionCode` | `long` | Internal version code |
-| `minSdkVersion` | `String` | Min SDK level |
-| `targetSdkVersion` | `String` | Target SDK level |
-| `permissions` | `List<String>` | Required permissions |
-| `features` | `List<String>` | Required hardware features |
-| `label` | `String` | App display name |
-| `icon` | `String` | Icon resource path |
+| `packageName` | `String` | p.ej. `com.example.app` |
+| `versionName` | `String` | p.ej. `1.0.0` |
+| `versionCode` | `long` | Código de versión interno |
+| `minSdkVersion` | `String` | Nivel mínimo de SDK |
+| `targetSdkVersion` | `String` | Nivel objetivo de SDK |
+| `permissions` | `List<String>` | Permisos requeridos |
+| `features` | `List<String>` | Características de hardware requeridas |
+| `label` | `String` | Nombre visible de la app |
+| `icon` | `String` | Ruta del recurso de icono |
 
 ### CLI
 
 ```bash
-java -jar miniApkReader.jar path/to/app.apk
+java -jar miniApkReader.jar ruta/a/app.apk
 ```
 
-## Dependencies
+## Dependencias
 
 - `net.dongliu:apk-parser:2.6.10`
 
-## Build
+## Compilación
 
 ```bash
 mvn clean install

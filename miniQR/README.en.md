@@ -1,28 +1,28 @@
 # miniQR
 
-Módulo de generación de códigos QR usando ZXing y JFreeSVG.
+QR code generation module using ZXing and JFreeSVG.
 
 ## API
 
 ```java
-// QR como BufferedImage
+// QR as BufferedImage
 BufferedImage qr = QRCodeGenerator.generateQRCodeImage("https://example.com", 300);
 
-// QR como cadena SVG
+// QR as SVG string
 String svg = QRCodeGenerator.generateSVG("https://example.com", 300);
 
-// Usar con miniStaticServer para inyección en plantillas
+// Use with miniStaticServer for template injection
 QrStaticSite site = new QrStaticSite(8080, Path.of("data"));
 site.addQrPlaceholder("myQR", "https://example.com", 300);
 site.start();
 ```
 
-## Dependencias
+## Dependencies
 
 - `com.google.zxing:core:3.5.3`
 - `org.jfree:jfreesvg:3.4`
 
-## Compilación
+## Build
 
 ```bash
 mvn clean install

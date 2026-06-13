@@ -1,41 +1,41 @@
 # miniJWS-demo
 
-Full demo server showcasing all features of miniJWS-core.
+Servidor de demostración completo mostrando todas las funcionalidades de miniJWS-core.
 
-## Run
+## Ejecutar
 
 ```bash
 mvn compile exec:java
 ```
 
-Opens on http://localhost:8080.
+Abre en http://localhost:8080.
 
-## Routes
+## Rutas
 
-| Route | Description |
-|-------|-------------|
+| Ruta | Descripción |
+|------|-------------|
 | `/` | 302 → `/index.html` |
-| `/index.html` | Static page from `./public` |
-| `/hello` | `Hello, World!` |
-| `/hello?name=X` | `Hello, X!` |
-| `/hello/:name` | Path param — `Hello, {name}!` |
-| `/api/info` | JSON with server info |
-| `POST /api/data` | Parse JSON or form body |
-| `/set-cookie` | Set a cookie |
-| `/get-cookies` | Read cookies as JSON |
+| `/index.html` | Página estática desde `./public` |
+| `/hello` | `¡Hola, Mundo!` |
+| `/hello?name=X` | `¡Hola, X!` |
+| `/hello/:name` | Parámetro de ruta — `¡Hola, {name}!` |
+| `/api/info` | JSON con información del servidor |
+| `POST /api/data` | Parsear cuerpo JSON o form |
+| `/set-cookie` | Establecer una cookie |
+| `/get-cookies` | Leer cookies como JSON |
 | `/old-path` | 301 → `/new-path` |
-| `/echo` | Echo request details |
-| `/*` | Static files from `./public` |
+| `/echo` | Eco de detalles de la solicitud |
+| `/*` | Archivos estáticos desde `./public` |
 
 ## Middleware
 
-| Middleware | Config |
-|-----------|--------|
-| `AccessLogMiddleware` | Stdout |
+| Middleware | Configuración |
+|-----------|---------------|
+| `AccessLogMiddleware` | Salida estándar |
 | `CorsMiddleware` | `allowOrigin("*")` |
-| `RateLimitMiddleware` | 200 req / 60 sec per IP |
+| `RateLimitMiddleware` | 200 req / 60 seg por IP |
 
-## Build
+## Compilación
 
 ```bash
 mvn clean install

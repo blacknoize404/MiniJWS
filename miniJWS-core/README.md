@@ -1,52 +1,52 @@
 # miniJWS-core
 
-Core HTTP/1.1 server library for MiniJWS — lightweight, modular, zero-dependency (except JetBrains annotations).
+Biblioteca central del servidor HTTP/1.1 para MiniJWS — ligera, modular, sin dependencias (excepto anotaciones JetBrains).
 
-## Features
+## Características
 
-- **HTTP/1.1** with keep-alive, chunked transfer, Content-Length
-- **Middleware pipeline** — logging, CORS, gzip, rate limiting, custom
-- **Routing** — exact, path params (`:id`), wildcards (`*`, `**`)
-- **Static file serving** — directory-based with MIME detection
-- **Request body parsing** — JSON, form-urlencoded, plain text
-- **Cookie support** — parse/set with `HttpOnly`, `Max-Age`, `Path`
-- **Redirect helper** — 301/302 via `HttpResponse.redirect()`
-- **Graceful shutdown** — SIGINT hook with `CountDownLatch`
+- **HTTP/1.1** con keep-alive, transferencia chunked, Content-Length
+- **Pipeline de middleware** — logging, CORS, gzip, limitación de tasa, personalizado
+- **Routing** — exacto, parámetros de ruta (`:id`), comodines (`*`, `**`)
+- **Servicio de archivos estáticos** — basado en directorios con detección MIME
+- **Parseo de cuerpo de solicitud** — JSON, form-urlencoded, texto plano
+- **Soporte de cookies** — parsear/establecer con `HttpOnly`, `Max-Age`, `Path`
+- **Ayudante de redirección** — 301/302 mediante `HttpResponse.redirect()`
+- **Apagado gradual** — hook SIGINT con `CountDownLatch`
 
-## Package Structure
+## Estructura del Paquete
 
 ```
 io.github.blacknoize404.miniJWS/
-├── HttpServer.java              # Main server (thread pool, routing, middleware)
+├── HttpServer.java              # Servidor principal (pool de hilos, rutas, middleware)
 ├── primitives/
-│   ├── ContentType.java         # MIME type enum
-│   ├── HttpMethod.java          # HTTP method enum
-│   ├── HttpStatusCode.java      # Status code enum
-│   ├── Middleware.java          # Middleware interface
-│   ├── MiddlewareChain.java     # Chain interface
-│   └── RequestRunner.java       # Route handler interface
+│   ├── ContentType.java         # Enum de tipos MIME
+│   ├── HttpMethod.java          # Enum de métodos HTTP
+│   ├── HttpStatusCode.java      # Enum de códigos de estado
+│   ├── Middleware.java          # Interfaz de middleware
+│   ├── MiddlewareChain.java     # Interfaz de cadena
+│   └── RequestRunner.java       # Interfaz de manejador de ruta
 ├── requests/
-│   ├── HttpDecoder.java         # Request parser (line-by-line)
-│   └── HttpRequest.java         # Request model (Builder, body parsing, cookies)
+│   ├── HttpDecoder.java         # Parseador de solicitudes (línea por línea)
+│   └── HttpRequest.java         # Modelo de solicitud (Builder, parseo de cuerpo, cookies)
 ├── responses/
-│   ├── HttpEncoder.java         # Response writer
-│   └── HttpResponse.java        # Response model (Builder, redirect, cookies)
+│   ├── HttpEncoder.java         # Escritor de respuestas
+│   └── HttpResponse.java        # Modelo de respuesta (Builder, redirect, cookies)
 ├── middleware/
-│   ├── AccessLogMiddleware.java # Apache-style async logging
-│   ├── CorsMiddleware.java      # CORS with preflight
-│   ├── GzipMiddleware.java      # Gzip compression
-│   └── RateLimitMiddleware.java # Per-IP rate limiting
+│   ├── AccessLogMiddleware.java # Logging asíncrono estilo Apache
+│   ├── CorsMiddleware.java      # CORS con preflight
+│   ├── GzipMiddleware.java      # Compresión Gzip
+│   └── RateLimitMiddleware.java # Limitación de tasa por IP
 ├── handlers/
-│   └── StaticFileHandler.java   # Built-in static file server
+│   └── StaticFileHandler.java   # Servidor de archivos estáticos integrado
 ├── headers/
-│   ├── Header.java              # HTTP header model
-│   ├── Field.java               # Header field parser
-│   └── Parameter.java           # Header parameter parser
+│   ├── Header.java              # Modelo de cabecera HTTP
+│   ├── Field.java               # Parseador de campos de cabecera
+│   └── Parameter.java           # Parseador de parámetros de cabecera
 └── content/
-    └── ContentTypes.java        # Extension-to-MIME mapping
+    └── ContentTypes.java        # Mapeo extensión-a-MIME
 ```
 
-## Quick Start
+## Inicio Rápido
 
 ```java
 HttpServer server = new HttpServer(8080);
@@ -58,14 +58,14 @@ server.addRoute(HttpMethod.GET, "/", req ->
     new HttpResponse.Builder()
         .setStatusCode(200)
         .setContentType(ContentType.HTML)
-        .setBody("<h1>Hello!</h1>")
+        .setBody("<h1>¡Hola!</h1>")
         .build()
 );
 
 server.run();
 ```
 
-## Build
+## Compilación
 
 ```bash
 mvn clean install

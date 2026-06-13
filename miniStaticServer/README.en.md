@@ -1,6 +1,6 @@
 # miniStaticServer
 
-Servidor de archivos estáticos sobre miniJWS-core con inyección de plantillas y soporte de códigos QR.
+Static file server on top of miniJWS-core with template injection and QR code support.
 
 ## API
 
@@ -13,7 +13,7 @@ site.start();
 site.idle();
 ```
 
-Los placeholders en plantillas usan la sintaxis `{{variableName}}`.
+Template placeholders use `{{variableName}}` syntax.
 
 ### QrStaticSite
 
@@ -24,14 +24,14 @@ site.addQrPlaceholder("downloadQR", "http://" + localIp + "/app.apk", 250);
 site.start();
 ```
 
-## Dependencias
+## Dependencies
 
-| Módulo | Alcance |
-|--------|---------|
+| Module | Scope |
+|--------|-------|
 | `miniJWS-core` | compile |
-| `miniQR` | opcional (requerido para QrStaticSite) |
+| `miniQR` | optional (required for QrStaticSite) |
 
-## Compilación
+## Build
 
 ```bash
 mvn clean install
