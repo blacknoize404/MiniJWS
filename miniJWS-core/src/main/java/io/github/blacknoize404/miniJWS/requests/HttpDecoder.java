@@ -48,10 +48,10 @@ public final class HttpDecoder {
             boolean chunked = false;
             String lastKey = null;
 
-            while ((headerLine = readLine(reader)) != null && !headerLine.isEmpty()) {
-                if (headerLine.length() > MAX_HEADER_LINE_LENGTH) {
-                    return Optional.empty();
-                }
+            while (true) {
+                headerLine = readLine(reader);
+                if (headerLine == null) return Optional.empty();
+                if (headerLine.isEmpty()) break;
 
                 if ((headerLine.charAt(0) == ' ' || headerLine.charAt(0) == '\t') && lastKey != null) {
                     var values = headers.get(lastKey);
