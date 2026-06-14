@@ -10,6 +10,44 @@ Este proyecto surgió en mi segundo año de Ingeniería Informática como una in
 
 > **Nota:** Aunque el proyecto está listo para usarse directamente, su documentación también recoge qué clases de Java se emplean y por qué, las decisiones de diseño que se tomaron y los patrones utilizados con su justificación, con el objetivo de que sirva como recurso para que estudiantes vean conceptos universitarios aplicados en un proyecto real.
 
+## ¿Por qué MiniJWS?
+
+En un ecosistema dominado por Spring Boot, Javalin, Spark y Helidon, MiniJWS ofrece una alternativa ligera, comprensible y extensible que prioriza la transparencia sobre la magia.
+
+### Frente a la competencia
+
+| Aspecto                 | Spring Boot  | Javalin / Spark | Helidon     | **MiniJWS**                                      |
+|-------------------------|--------------|-----------------|-------------|--------------------------------------------------|
+| Tamaño                  | ~50 MB base  | ~10 MB          | ~30 MB      | **~200 KB**                                      |
+| Arranque                | 3-6 s        | 0.5-1 s         | 1-2 s       | **< 100 ms**                                     |
+| Anotaciones / reflexión | Extensivo    | Mínimo          | Moderado    | **Cero**                                         |
+| Curva de aprendizaje    | Alta         | Media           | Alta        | **Baja**                                         |
+| Código fuente           | ~15 M líneas | ~50 K líneas    | ~1 M líneas | **~3 K líneas**                                  |
+| Modular transversal     | No nativo    | No              | No          | **Sí (miniQR, miniApkReader, miniStaticServer)** |
+| Propósito educativo     | No           | No              | No          | **Sí (documentación pedagógica completa)**       |
+
+Mientras que las alternativas comerciales resuelven problemas empresariales con capas de abstracción, MiniJWS resuelve el problema de **entender cómo funciona un servidor HTTP por dentro**, sin sacrificar utilidad práctica.
+
+### Lo que se puede lograr
+
+- **Servidores embebidos en dispositivos IoT** — arranque instantáneo y huella mínima
+- **APIs REST para prototipado** — escribe una API funcional en 5 líneas sin configuración
+- **Herramientas de desarrollo locales** — servidores de prueba, _mocks_, paneles de admin
+- **Sitios estáticos inteligentes** — combina miniStaticServer con miniQR para generar páginas con códigos QR inyectados en plantillas HTML
+- **Microservicios ligeros** — cada módulo Maven despliega independientemente, ideal para arquitecturas modulares
+- **Analizadores de metadatos** — miniApkReader extrae paquetes, permisos y características de archivos APK Android desde una API REST
+- **Educación e investigación** — código legible, documentado y comentado deliberadamente para que estudiantes vean HTTP implementado sin magia
+- **Middleware a medida** — la interfaz `Middleware` de una sola función permite escribir tu propio pipeline en segundos
+
+### Filosofía
+
+MiniJWS no compite con Spring Boot en el terreno empresarial. Su potencial está en ser la opción correcta cuando necesitas:
+
+1. **Entender** qué está pasando realmente en una petición HTTP
+2. **Control total** sin configuración automática ni _classpath scanning_
+3. **Modularización real** — añade QR, APK o estáticos como módulos independientes
+4. **Resultado inmediato** — servidor funcional sin anotaciones, sin Gradle, sin gigantes de framework
+
 ## Características
 
 - **Servidor HTTP/1.1** con concurrencia mediante pool de hilos y conexiones persistentes
