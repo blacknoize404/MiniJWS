@@ -426,4 +426,4 @@ Los `record` generan `equals()` y `hashCode()` automáticamente basados en todos
 ---
 
 [← Anterior](exceptions-time.md) · [Siguiente →](../index.md)  
-[🇪🇸 Español](misc.md)
+[🇪🇸 Español](misc.md) · [🇬🇧 English](misc.en.md)

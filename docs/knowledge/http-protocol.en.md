@@ -414,5 +414,5 @@ If you're studying computer science and want to really understand how the web wo
 
 ---
 
-[← Previous](index.md) · [Next →](patterns.md)  
+[← Previous](index.en.md) · [Next →](patterns.en.md)  
 [🇪🇸 Español](http-protocol.md) · [🇬🇧 English](http-protocol.en.md)

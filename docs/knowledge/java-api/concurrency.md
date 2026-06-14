@@ -280,4 +280,4 @@ No se usa `volatile` directamente en el proyecto (se prefiere `AtomicBoolean`).
 ---
 
 [← Anterior](generics-collections.md) · [Siguiente →](io-networking.md)  
-[🇪🇸 Español](concurrency.md)
+[🇪🇸 Español](concurrency.md) · [🇬🇧 English](concurrency.en.md)

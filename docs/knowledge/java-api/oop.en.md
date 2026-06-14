@@ -1,14 +1,14 @@
 # OOP — Object-Oriented Programming
 
-## Inner Classes (Clases Internas)
+## Inner Classes
 
 ### Static Inner Class
 
-No tiene referencia a la instancia de la clase externa. Se usa típicamente para Builders.
+Has no reference to the outer class instance. Typically used for Builders.
 
 ```java
 public class HttpResponse {
-    // ... campos y métodos de HttpResponse ...
+    // ... HttpResponse fields and methods ...
 
     public static class Builder {
         private int statusCode = 200;
@@ -24,21 +24,21 @@ public class HttpResponse {
     }
 }
 
-// Uso:
+// Usage:
 new HttpResponse.Builder()
     .setStatusCode(200)
     .setContentType(ContentType.JSON)
     .build();
 ```
 
-**Características:**
-- Se instancia sin instancia de la clase externa: `new HttpResponse.Builder()`
-- Puede acceder a miembros `private` estáticos de la clase externa
-- El constructor de `HttpResponse` es privado, pero `Builder` (siendo inner class) puede llamarlo
+**Features:**
+- Instantiated without an outer class instance: `new HttpResponse.Builder()`
+- Can access `private` static members of the outer class
+- `HttpResponse` constructor is private, but `Builder` (being an inner class) can call it
 
 ### Anonymous Class
 
-Clase sin nombre definida e instanciada en una sola expresión. Usado en el proyecto para:
+Nameless class defined and instantiated in a single expression. Used in the project for:
 
 1. **Shutdown hook:**
 
@@ -46,7 +46,7 @@ Clase sin nombre definida e instanciada en una sola expresión. Usado en el proy
 Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
 ```
 
-2. **GZIPOutputStream con nivel personalizado:**
+2. **GZIPOutputStream with custom level:**
 
 ```java
 var gz = new GZIPOutputStream(bos) {{
@@ -54,43 +54,43 @@ var gz = new GZIPOutputStream(bos) {{
 }};
 ```
 
-Este es un **double brace initialization** — la primera llave crea una anonymous subclass, la segunda es un instance initializer.
+This is a **double brace initialization** — the first brace creates an anonymous subclass, the second is an instance initializer.
 
-3. **Hilo worker en AccessLogMiddleware:**
+3. **Worker thread in AccessLogMiddleware:**
 
 ```java
 this.worker = new Thread(() -> drainTo(pw), "access-log");
 ```
 
-(Aquí la lambda evita la anonymous class, pero en Java 8+ es equivalente.)
+(Here the lambda avoids the anonymous class, but in Java 8+ it's equivalent.)
 
 ### Double Brace Initialization
 
-Patrón que combina anonymous class + instance initializer. La primera `{` crea una subclase anónima, la segunda `{` es un bloque inicializador de instancia.
+Pattern that combines anonymous class + instance initializer. The first `{` creates an anonymous subclass, the second `{` is an instance initializer block.
 
 ```java
-// En GzipMiddleware — personalizar nivel de compresión:
+// In GzipMiddleware — customize compression level:
 var gz = new GZIPOutputStream(bos) {{
     def.setLevel(level);
 }};
 ```
 
-**Equivalente sin double brace:**
+**Equivalent without double brace:**
 ```java
 var gz = new GZIPOutputStream(bos) {
     {
-        // instance initializer — se ejecuta después del constructor
+        // instance initializer — executes after the constructor
         def.setLevel(level);
     }
 };
 ```
 
-**⚠ Advertencia:** Double brace initialization crea una clase anónima adicional en cada uso, lo que puede aumentar el uso de memoria en bucles. En GzipMiddleware se usa una sola vez por request comprimido, es aceptable.
+**⚠ Warning:** Double brace initialization creates an additional anonymous class on each use, which can increase memory usage in loops. In GzipMiddleware it's used once per compressed request, which is acceptable.
 
 ## Private Constructor
 
-Se usa para:
-1. **Clases utilitarias** (solo métodos estáticos, no deben instanciarse):
+Used for:
+1. **Utility classes** (only static methods, should not be instantiated):
 
 ```java
 public final class HttpEncoder {
@@ -99,8 +99,8 @@ public final class HttpEncoder {
 }
 ```
 
-2. **Singleton pattern** (aunque no usado en el proyecto)
-3. **Forzar uso del Builder** — el constructor de `HttpResponse` y `HttpRequest` es privado, solo el Builder puede construirlos:
+2. **Singleton pattern** (although not used in the project)
+3. **Force Builder usage** — `HttpResponse` and `HttpRequest` constructors are private, only the Builder can construct them:
 
 ```java
 public class HttpRequest {
@@ -117,21 +117,21 @@ public class HttpRequest {
 
 ### Static Fields
 
-Una copia compartida por todas las instancias (o accesible sin instancia):
+Single copy shared by all instances (or accessible without an instance):
 
 ```java
-// En HttpServer:
+// In HttpServer:
 public static final String SERVER_NAME = "MiniJWS";
 private static final int MAX_KEEPALIVE_REQUESTS = 100;
 private static final int KEEPALIVE_TIMEOUT_MS = 10_000;
 
-// En HttpStatusCode:
+// In HttpStatusCode:
 public static final Map<Integer, String> STATUS_CODES = Map.ofEntries(...);
 ```
 
 ### Static Methods
 
-Operan a nivel de clase, no requieren instancia:
+Operate at the class level, do not require an instance:
 
 ```java
 HttpResponse.redirect("/login");           // factory method
@@ -142,7 +142,7 @@ HttpServer.matchPath(pattern, path);       // package-private helper
 
 ### Static Initializer
 
-Bloque ejecutado una vez al cargar la clase. Útil para inicializar estructuras estáticas:
+Block executed once when the class is loaded. Useful for initializing static structures:
 
 ```java
 public enum ContentType {
@@ -161,27 +161,27 @@ public enum ContentType {
 
 ## Method Overriding
 
-Sobrescribir un método de superclase o interfaz requiere:
-- Misma firma (nombre + parámetros)
-- Mismo tipo de retorno o covariante
-- Visibilidad no más restrictiva
+Overriding a superclass or interface method requires:
+- Same signature (name + parameters)
+- Same return type or covariant
+- Visibility no more restrictive
 
-Ejemplo: ninguna clase en el proyecto extiende otras clases, pero todas implementan interfaces:
+Example: no class in the project extends other classes, but all implement interfaces:
 
 ```java
 @Override
 public HttpResponse run(HttpRequest request, MiddlewareChain chain) {
-    // implementación específica del middleware
+    // specific middleware implementation
 }
 ```
 
 ## Composition over Inheritance
 
-El proyecto favorece composición sobre herencia. Ejemplo claro: `StaticSite` contiene un `HttpServer` en lugar de extenderlo:
+The project favors composition over inheritance. Clear example: `StaticSite` contains an `HttpServer` instead of extending it:
 
 ```java
 public final class StaticSite {
-    private final HttpServer server;  // composición
+    private final HttpServer server;  // composition
 
     public StaticSite(int port, Path rootDirectory) throws IOException {
         this.server = new HttpServer(port);
@@ -189,17 +189,17 @@ public final class StaticSite {
     }
 
     public void start() {
-        new Thread(server::run).start();  // delega
+        new Thread(server::run).start();  // delegates
     }
 }
 ```
 
 ## Fluent Interface (Method Chaining)
 
-Cada método setter devuelve `this` para permitir encadenamiento:
+Each setter method returns `this` to allow chaining:
 
 ```java
-// En HttpServer:
+// In HttpServer:
 public HttpServer addRoute(HttpMethod method, String path, RequestRunner runner) {
     routes.put(key, runner);
     return this;
@@ -210,7 +210,7 @@ public HttpServer use(Middleware middleware) {
     return this;
 }
 
-// Uso:
+// Usage:
 server.use(new AccessLogMiddleware())
       .use(new CorsMiddleware())
       .addRoute(HttpMethod.GET, "/", handler);
@@ -218,18 +218,18 @@ server.use(new AccessLogMiddleware())
 
 ## Package-Private (Default Access)
 
-Métodos sin modificador de acceso — visibles dentro del mismo paquete:
+Methods without access modifier — visible within the same package:
 
 ```java
-// En HttpServer — package-private para testing:
+// In HttpServer — package-private for testing:
 static Map<String, String> matchPath(String pattern, String path) {
     // ...
 }
 ```
 
-Esto permite que tests en el mismo paquete accedan sin hacer el método público.
+This allows tests in the same package to access without making the method public.
 
 ---
 
-[← Anterior](basics.md) · [Siguiente →](generics-collections.md)  
+[← Previous](basics.en.md) · [Next →](generics-collections.en.md)  
 [🇪🇸 Español](oop.md) · [🇬🇧 English](oop.en.md)

@@ -226,4 +226,4 @@ Referencia a la instancia actual. Usos:
 ---
 
 [← Anterior](index.md) · [Siguiente →](oop.md)  
-[🇪🇸 Español](basics.md)
+[🇪🇸 Español](basics.md) · [🇬🇧 English](basics.en.md)

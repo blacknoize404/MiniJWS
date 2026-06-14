@@ -2,14 +2,14 @@
 
 ## Lambdas (Java 8+)
 
-Expresiones que representan una función anónima. Sintaxis: `(params) -> { cuerpo }` o `(params) -> expresión`.
+Expressions that represent an anonymous function. Syntax: `(params) -> { body }` or `(params) -> expression`.
 
-### Uso como Implementación de FunctionalInterface
+### Usage as FunctionalInterface Implementation
 
-Donde se espera una interfaz con un solo método abstracto:
+Where a single abstract method interface is expected:
 
 ```java
-// Lambda como RequestRunner (interfaz funcional):
+// Lambda as RequestRunner (functional interface):
 server.addRoute(HttpMethod.GET, "/hello", req ->
     new HttpResponse.Builder()
         .setContentType(ContentType.TEXT)
@@ -17,7 +17,7 @@ server.addRoute(HttpMethod.GET, "/hello", req ->
         .build()
 );
 
-// Lambda con bloque:
+// Lambda with block:
 server.addRoute(HttpMethod.GET, "/hello/:name", req -> {
     String name = req.getParameters().get("name");
     return new HttpResponse.Builder()
@@ -27,7 +27,7 @@ server.addRoute(HttpMethod.GET, "/hello/:name", req -> {
 });
 ```
 
-### Lambda como Middleware
+### Lambda as Middleware
 
 ```java
 server.use((request, chain) -> {
@@ -39,22 +39,22 @@ server.use((request, chain) -> {
 });
 ```
 
-### Lambda en la Cadena de Middleware
+### Lambda in Middleware Chain
 
 ```java
 chain = req -> mw.run(req, next);
 ```
 
-Aquí `req` es el parámetro del método `MiddlewareChain.next()`. La lambda captura `mw` y `next` (variables externas — ver closure más abajo).
+Here `req` is the parameter of the `MiddlewareChain.next()` method. The lambda captures `mw` and `next` (external variables — see closure below).
 
-### Lambda en Threads
+### Lambda in Threads
 
 ```java
 new Thread(() -> drainTo(pw), "access-log").start();
 threadPool.execute(() -> handleConnection(client));
 ```
 
-### Lambda en Shutdown Hook
+### Lambda in Shutdown Hook
 
 ```java
 Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
@@ -64,62 +64,62 @@ Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
 
 ## Method References (::)
 
-Atajo para lambdas que solo llaman a un método existente.
+Shortcut for lambdas that only call an existing method.
 
-| Forma | Sintaxis | Equivalente Lambda |
-|-------|----------|-------------------|
+| Form | Syntax | Lambda Equivalent |
+|------|--------|------------------|
 | Static method | `ClassName::staticMethod` | `args → ClassName.staticMethod(args)` |
 | Instance method | `instance::method` | `args → instance.method(args)` |
 | Constructor | `ClassName::new` | `args → new ClassName(args)` |
 
-**Ejemplos en el proyecto:**
+**Examples in the project:**
 
 ```java
 // Static method reference (ApkReader):
-.map(p -> p.getName())  // → podría ser .map(ApkPermission::getName)
-// pero en el proyecto se usa lambda explícita.
+.map(p -> p.getName())  // → could be .map(ApkPermission::getName)
+// but the project uses an explicit lambda.
 
 // Instance method reference (shutdown hook):
 Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
-// Equivalente a: new Thread(() -> this.stop())
+// Equivalent to: new Thread(() -> this.stop())
 
 // Constructor reference:
-// (no usado directamente, pero válido)
+// (not used directly, but valid)
 ```
 
 ---
 
-## Closures (Captura de Variables)
+## Closures (Variable Capture)
 
-Las lambdas pueden acceder a variables del ámbito donde se definen, siempre que sean **effectively final** (no reasignadas después de la captura).
+Lambdas can access variables from the scope where they are defined, as long as they are **effectively final** (not reassigned after capture).
 
 ```java
-// En buildChain():
+// In buildChain():
 for (int i = middlewares.size() - 1; i >= 0; i--) {
     Middleware mw = middlewares.get(i);
     MiddlewareChain next = chain;       // effectively final
-    chain = req -> mw.run(req, next);   // captura mw y next
+    chain = req -> mw.run(req, next);   // captures mw and next
 }
-// Cada iteración captura sus propias variables mw y next (diferentes para cada lambda)
+// Each iteration captures its own mw and next variables (different for each lambda)
 ```
 
-Otro ejemplo — captura de `chain` y luego `middleware`:
+Another example — capturing `chain` and then `middleware`:
 
 ```java
-// CorsMiddleware como expresión fluida:
+// CorsMiddleware as fluent expression:
 server.use(new CorsMiddleware().allowOrigin("*"));
-// La lambda registrada captura la configuración del middleware.
+// The registered lambda captures the middleware configuration.
 ```
 
 ---
 
 ## Stream API (Java 8+)
 
-Secuencia de elementos que soporta operaciones funcionales estilo map/filter/reduce.
+Sequence of elements supporting functional-style map/filter/reduce operations.
 
 ### stream()
 
-Convierte una colección en un stream:
+Converts a collection into a stream:
 
 ```java
 meta.getUsesPermissions().stream()
@@ -129,7 +129,7 @@ meta.getUsesPermissions().stream()
 
 ### map()
 
-Transforma cada elemento:
+Transforms each element:
 
 ```java
 .stream()
@@ -138,7 +138,7 @@ Transforma cada elemento:
 
 ### filter()
 
-Selecciona elementos que cumplen una condición:
+Selects elements that satisfy a condition:
 
 ```java
 .stream()
@@ -147,16 +147,16 @@ Selecciona elementos que cumplen una condición:
 
 ### forEach()
 
-Ejecuta una acción por cada elemento:
+Executes an action for each element:
 
 ```java
 info.permissions().forEach(p -> sb.append("  - ").append(p).append("\n"));
-// Uso directo en Collection (no necesita .stream() para forEach)
+// Direct usage on Collection (does not need .stream() for forEach)
 ```
 
 ### collect()
 
-Convierte el stream de vuelta a una colección:
+Converts the stream back to a collection:
 
 ```java
 .collect(Collectors.toList())  // → List
@@ -167,13 +167,13 @@ Convierte el stream de vuelta a una colección:
 ```java
 boolean alreadyEncoded = response.getHeaders().keySet().stream()
     .anyMatch(k -> k.equalsIgnoreCase("Content-Encoding"));
-// → true si algún header coincide
+// → true if any header matches
 ```
 
-### Stream en HttpDecoder
+### Stream in HttpDecoder
 
 ```java
-// (implícito) — recorrer headers map
+// (implicit) — iterating over headers map
 for (var entry : response.getHeaders().entrySet()) {
     builder.addHeader(entry.getKey(), entry.getValue());
 }
@@ -181,10 +181,10 @@ for (var entry : response.getHeaders().entrySet()) {
 
 ### toList() (Java 16+)
 
-Alternativa directa a `collect(Collectors.toList())`:
+Direct alternative to `collect(Collectors.toList())`:
 
 ```java
-stream.toList()  // → lista inmutable
+stream.toList()  // → immutable list
 ```
 
 ---
@@ -193,7 +193,7 @@ stream.toList()  // → lista inmutable
 
 ### Collectors.toList()
 
-Acumula elementos en un `List`:
+Accumulates elements into a `List`:
 
 ```java
 .collect(Collectors.toList())
@@ -201,10 +201,10 @@ Acumula elementos en un `List`:
 
 ### Collectors.joining()
 
-Concatena strings:
+Concatenates strings:
 
 ```java
-String.join(", ", allowMethods)  // alternativa sin stream
+String.join(", ", allowMethods)  // alternative without stream
 ```
 
 ---
@@ -212,28 +212,28 @@ String.join(", ", allowMethods)  // alternativa sin stream
 ## Double-Colon Operator (::) for Iteration
 
 ```java
-// En AccessLogMiddleware.drainTo:
-queue.drainTo(lines);  // no es stream, pero usa el concepto
+// In AccessLogMiddleware.drainTo:
+queue.drainTo(lines);  // not a stream, but uses the concept
 lines.forEach(line -> writer.println(line));  // Consumer lambda
 ```
 
 ---
 
-## Notas Adicionales
+## Additional Notes
 
 ### Lambda vs Anonymous Class
 
-Las lambdas son más concisas y no crean un archivo .class separado. Sintácticamente equivalentes a anonymous classes de functional interfaces.
+Lambdas are more concise and do not create a separate .class file. Syntactically equivalent to anonymous classes of functional interfaces.
 
 ### Effectively Final
 
-Desde Java 8, las variables capturadas en lambdas no necesitan ser declaradas `final` explícitamente — solo no pueden reasignarse después de la captura.
+Since Java 8, captured variables in lambdas do not need to be explicitly declared `final` — they just cannot be reassigned after capture.
 
-### Streams son Lazy
+### Streams are Lazy
 
-Las operaciones intermedias (`map`, `filter`) son perezosas — no se ejecutan hasta que una operación terminal (`collect`, `forEach`, `anyMatch`) las dispara.
+Intermediate operations (`map`, `filter`) are lazy — they do not execute until a terminal operation (`collect`, `forEach`, `anyMatch`) triggers them.
 
 ---
 
-[← Anterior](io-networking.md) · [Siguiente →](exceptions-time.md)  
+[← Previous](io-networking.en.md) · [Next →](exceptions-time.en.md)  
 [🇪🇸 Español](streams-lambdas.md) · [🇬🇧 English](streams-lambdas.en.md)

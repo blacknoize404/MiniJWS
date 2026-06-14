@@ -1,6 +1,6 @@
-# Middleware Classes
+# Clases de Middleware
 
-All middleware implement the `Middleware` functional interface:
+Todos los middleware implementan la interfaz funcional `Middleware`:
 
 ```java
 @FunctionalInterface
@@ -9,58 +9,58 @@ public interface Middleware {
 }
 ```
 
-They are registered via `server.use(middleware)` and executed in registration order.
+Se registran mediante `server.use(middleware)` y se ejecutan en orden de registro.
 
 ---
 
 ## AccessLogMiddleware
 
-**File:** `miniJWS-core/src/main/java/.../middleware/AccessLogMiddleware.java`
+**Archivo:** `miniJWS-core/src/main/java/.../middleware/AccessLogMiddleware.java`
 
-Apache Common Log Format logging with asynchronous I/O.
+Logging en formato Apache Common Log con E/S asíncrona.
 
-### Architecture
+### Arquitectura
 
 ```
-Request Thread                  Worker Thread (daemon)
+Hilo de Petición              Hilo Trabajador (daemon)
     │                                │
     ├── formatLogLine()              │
-    ├── queue.offer(line) ──────────►├── queue.take() (blocks)
+    ├── queue.offer(line) ──────────►├── queue.take() (bloquea)
     │                                ├── writer.println(line)
     │                                ├── writer.flush()
-    │                                └── loop
-    └── return response
+    │                                └── bucle
+    └── devuelve respuesta
 ```
 
-### Constructor Options
+### Opciones del Constructor
 
-| Constructor | Output Target |
-|-------------|---------------|
-| `AccessLogMiddleware()` | `System.out` (wrapped in `PrintWriter`) |
-| `AccessLogMiddleware(String filePath)` | File (append, UTF-8) |
-| `AccessLogMiddleware(PrintWriter writer)` | Custom writer |
+| Constructor | Destino de Salida |
+|-------------|-------------------|
+| `AccessLogMiddleware()` | `System.out` (envuelto en `PrintWriter`) |
+| `AccessLogMiddleware(String filePath)` | Archivo (append, UTF-8) |
+| `AccessLogMiddleware(PrintWriter writer)` | Escritor personalizado |
 
-### Log Format
+### Formato del Log
 
 ```
 127.0.0.1 - - [13/Jun/2026:14:30:00 +0000] "GET /hello HTTP/1.1" 200 13 (2ms)
 ```
 
-Fields: remote IP (respects `X-Forwarded-For`), timestamp, request line, status code, body size, elapsed ms.
+Campos: IP remota (respeta `X-Forwarded-For`), marca temporal, línea de petición, código de estado, tamaño del cuerpo, ms transcurridos.
 
-### Key Design Points
+### Puntos Clave de Diseño
 
-- `BlockingQueue<String>` (capacity 16_384) decouples request handling from log I/O
-- `queue.offer()` never blocks (returns false if full, line is dropped)
-- Worker is a daemon thread (doesn't prevent JVM exit)
-- Shutdown hook drains remaining entries with `flushRemaining()`
+- `BlockingQueue<String>` (capacidad 16_384) desacopla el manejo de peticiones de la E/S de log
+- `queue.offer()` nunca bloquea (devuelve false si está llena, la línea se descarta)
+- El trabajador es un hilo daemon (no impide la salida de la JVM)
+- El hook de apagado drena las entradas restantes con `flushRemaining()`
 
-### Shutdown Hook
+### Hook de Apagado
 
 ```java
 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
     worker.interrupt();
-    worker.join(2_000);  // wait up to 2s for flush
+    worker.join(2_000);  // espera hasta 2s para vaciar
     flushRemaining(writer);
 }));
 ```
@@ -69,76 +69,64 @@ Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 
 ## CorsMiddleware
 
-**File:** `miniJWS-core/src/main/java/.../middleware/CorsMiddleware.java`
+**Archivo:** `miniJWS-core/src/main/java/.../middleware/CorsMiddleware.java`
 
-CORS (Cross-Origin Resource Sharing) implementation.
+Implementación de CORS (Cross-Origin Resource Sharing).
 
-### Configuration Methods
+### Métodos de Configuración
 
-| Method | Default | Description |
-|--------|---------|-------------|
-| `allowOrigin(String)` | `*` | Allowed origin |
-| `allowMethods(String...)` | GET, POST, PUT, DELETE, OPTIONS, PATCH | Allowed methods |
-| `allowHeaders(String...)` | Content-Type, Authorization | Allowed headers |
-| `allowCredentials(boolean)` | `false` | Whether to send credentials |
-| `maxAge(int)` | `-1` | Preflight cache duration |
+| Método | Por Defecto | Descripción |
+|--------|-------------|-------------|
+| `allowOrigin(String)` | `*` | Origen permitido |
+| `allowMethods(String...)` | GET, POST, PUT, DELETE, OPTIONS, PATCH | Métodos permitidos |
+| `allowHeaders(String...)` | Content-Type, Authorization | Cabeceras permitidas |
+| `allowCredentials(boolean)` | `false` | Si enviar credenciales |
+| `maxAge(int)` | `-1` | Duración de caché preflight |
 
-### Request Flow
+### Flujo de Petición
 
-1. **No Origin header** → skip (pass through to next middleware)
-2. **OPTIONS request** → return 204 with CORS headers (preflight)
-3. **Normal request** → call `chain.next()`, add CORS headers to response
+1. **Sin cabecera Origin** → saltar (pasar al siguiente middleware)
+2. **Petición OPTIONS** → devolver 204 con cabeceras CORS (preflight)
+3. **Petición normal** → llamar `chain.next()`, añadir cabeceras CORS a la respuesta
 
-### Special Handling: `*` + Credentials
+### Manejo Especial: `*` + Credenciales
 
-The CORS spec forbids `Access-Control-Allow-Origin: *` when `Access-Control-Allow-Credentials: true`. When `allowCredentials(true)` is called with `allowOrigin("*")`:
-- `allowCredentials(true)` **throws** `IllegalStateException` immediately (fail-fast)
-- Workaround: use `allowOrigin("https://specific.domain")` with credentials, or call `allowCredentials(true)` before `allowOrigin("*")` (order matters because `allowCredentials()` validates on call — you can set credentials first, then origin to `*` to skip validation)
+La especificación CORS prohíbe `Access-Control-Allow-Origin: *` cuando `Access-Control-Allow-Credentials: true`. Cuando se llama a `allowCredentials(true)` con `allowOrigin("*")`:
+- `allowCredentials(true)` **lanza** `IllegalStateException` inmediatamente (fail-fast)
+- Solución: usar `allowOrigin("https://dominio.especifico")` con credenciales, o llamar a `allowCredentials(true)` antes de `allowOrigin("*")` (el orden importa porque `allowCredentials()` valida en el momento de la llamada — puedes establecer credenciales primero, luego origen a `*` para saltar la validación)
 
-Wait — actually looking at the code:
+El orden importa: `allowCredentials(true)` lanza si hay `*`. Pero `allowCredentials(false)` → luego `allowOrigin("*")` funciona. Y luego `allowCredentials(true)` lanzaría. Así que la secuencia segura es `allowCredentials(true)` primero, luego `allowOrigin("dominio-especifico")`.
 
-```java
-public CorsMiddleware allowCredentials(boolean allow) {
-    if (allow && "*".equals(allowOrigin)) {
-        throw new IllegalStateException(...);
-    }
-    this.allowCredentials = allow;
-    return this;
-}
-```
+### Copia de Cabeceras
 
-The order matters: `allowCredentials(true)` throws if `*`. But `allowCredentials(false)` → then `allowOrigin("*")` works. And then `allowCredentials(true)` would throw. So the safe sequence is `allowCredentials(true)` first, then `allowOrigin("specific-domain")`.
-
-### Header Copying
-
-When adding CORS headers to an existing response, the middleware rebuilds the response (copies all headers, status, method, body) to preserve immutability.
+Al añadir cabeceras CORS a una respuesta existente, el middleware reconstruye la respuesta (copia todas las cabeceras, estado, método, cuerpo) para preservar la inmutabilidad.
 
 ---
 
 ## GzipMiddleware
 
-**File:** `miniJWS-core/src/main/java/.../middleware/GzipMiddleware.java`
+**Archivo:** `miniJWS-core/src/main/java/.../middleware/GzipMiddleware.java`
 
-Response compression for clients that accept gzip encoding.
+Compresión de respuestas para clientes que aceptan codificación gzip.
 
-### Algorithm
+### Algoritmo
 
-1. Check `Accept-Encoding` header — if no `gzip`, pass through
-2. Call `chain.next(request)` to get the response
-3. Skip if: body empty, already `Content-Encoding`, or body < 256 bytes
-4. Compress with `GZIPOutputStream`
-5. Skip if compressed ≥ original size
-6. Build new response with `Content-Encoding: gzip`
+1. Verificar cabecera `Accept-Encoding` — si no hay `gzip`, pasar
+2. Llamar a `chain.next(request)` para obtener la respuesta
+3. Omitir si: cuerpo vacío, ya tiene `Content-Encoding`, o cuerpo < 256 bytes
+4. Comprimir con `GZIPOutputStream`
+5. Omitir si comprimido ≥ tamaño original
+6. Construir nueva respuesta con `Content-Encoding: gzip`
 
-### Compression Tuning
+### Ajuste de Compresión
 
 ```java
-new GzipMiddleware();    // default level 6
-new GzipMiddleware(9);   // max compression (slower)
-new GzipMiddleware(1);   // fastest, least compression
+new GzipMiddleware();    // nivel por defecto 6
+new GzipMiddleware(9);   // compresión máxima (más lento)
+new GzipMiddleware(1);   // más rápido, menos compresión
 ```
 
-### Level Setting
+### Establecimiento del Nivel
 
 ```java
 private final int level;
@@ -147,7 +135,7 @@ public GzipMiddleware(int level) {
 }
 ```
 
-The level is applied via an anonymous subclass:
+El nivel se aplica mediante una subclase anónima:
 
 ```java
 var gz = new GZIPOutputStream(bos) {{
@@ -155,7 +143,7 @@ var gz = new GZIPOutputStream(bos) {{
 }};
 ```
 
-### Double Compression Guard
+### Protección contra Doble Compresión
 
 ```java
 boolean alreadyEncoded = response.getHeaders().keySet().stream()
@@ -163,48 +151,48 @@ boolean alreadyEncoded = response.getHeaders().keySet().stream()
 if (alreadyEncoded) return response;
 ```
 
-Prevents compressing an already-compressed response.
+Evita comprimir una respuesta ya comprimida.
 
-### try-finally on GZIPOutputStream
+### try-finally en GZIPOutputStream
 
 ```java
 try {
     gz.write(data);
 } finally {
-    gz.close();  // ensures trailer is written even if write fails
+    gz.close();  // asegura que el trailer se escribe incluso si write falla
 }
 ```
 
-The `close()` call writes the gzip trailer (CRC32 + size). Without it, the stream is incomplete.
+La llamada `close()` escribe el trailer gzip (CRC32 + tamaño). Sin ella, el flujo queda incompleto.
 
 ---
 
 ## RateLimitMiddleware
 
-**File:** `miniJWS-core/src/main/java/.../middleware/RateLimitMiddleware.java`
+**Archivo:** `miniJWS-core/src/main/java/.../middleware/RateLimitMiddleware.java`
 
-Per-IP rate limiting using a sliding window.
+Limitación de tasa por IP usando ventana deslizante.
 
-### Data Structure
+### Estructura de Datos
 
 ```java
 ConcurrentHashMap<String, Queue<Instant>> requests = new ConcurrentHashMap<>();
 AtomicInteger totalEntries = new AtomicInteger(0);
 ```
 
-Each IP has a `ConcurrentLinkedQueue<Instant>` of request timestamps.
+Cada IP tiene una `ConcurrentLinkedQueue<Instant>` de marcas temporales de peticiones.
 
-### Algorithm
+### Algoritmo
 
-1. Extract client IP (respects `X-Forwarded-For`, `X-Real-IP`)
-2. Get or create the timestamp queue for that IP
+1. Extraer IP del cliente (respeta `X-Forwarded-For`, `X-Real-IP`)
+2. Obtener o crear la cola de marcas temporales para esa IP
 3. `synchronized(queue)`:
-   - Remove timestamps older than the window
-   - If queue size ≥ `maxRequests` → return 429
-   - Otherwise, add current timestamp
-4. If `totalEntries > CLEANUP_THRESHOLD` (10_000), trigger `cleanupStaleEntries()`
+   - Eliminar marcas temporales más antiguas que la ventana
+   - Si el tamaño de la cola ≥ `maxRequests` → devolver 429
+   - Si no, añadir la marca temporal actual
+4. Si `totalEntries > CLEANUP_THRESHOLD` (10_000), activar `cleanupStaleEntries()`
 
-### Cleanup (Memory Leak Prevention)
+### Limpieza (Prevención de Fugas de Memoria)
 
 ```java
 private void cleanupStaleEntries(Instant cutoff) {
@@ -216,7 +204,7 @@ private void cleanupStaleEntries(Instant cutoff) {
                 q.poll();
             }
             if (q.isEmpty()) {
-                it.remove();         // remove IP from map
+                it.remove();         // eliminar IP del mapa
                 removed++;
             }
         }
@@ -225,9 +213,9 @@ private void cleanupStaleEntries(Instant cutoff) {
 }
 ```
 
-Without this cleanup, inactive IPs accumulate in the `ConcurrentHashMap` forever, causing a memory leak. The threshold-based cleanup (`> 10_000` entries) ensures bounded memory usage.
+Sin esta limpieza, las IPs inactivas se acumulan en el `ConcurrentHashMap` para siempre, causando una fuga de memoria. La limpieza basada en umbral (`> 10_000` entradas) asegura un uso de memoria acotado.
 
-### 429 Response
+### Respuesta 429
 
 ```java
 return new HttpResponse.Builder()
@@ -240,5 +228,5 @@ return new HttpResponse.Builder()
 
 ---
 
-[← Previous](classes-core.md) · [Next →](classes-support.md)  
-[🇪🇸 Español](classes-middleware.md) · [🇬🇧 English](classes-middleware.md)
+[← Anterior](classes-core.md) · [Siguiente →](classes-support.md)  
+[🇪🇸 Español](classes-middleware.md) · [🇬🇧 English](classes-middleware.en.md)

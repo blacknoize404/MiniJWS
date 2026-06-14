@@ -1,63 +1,63 @@
-# Support Classes & Other Modules
+# Clases de Soporte y Otros Módulos
 
-## ContentType Enum
+## Enum ContentType
 
-**File:** `miniJWS-core/src/main/java/.../primitives/ContentType.java`
+**Archivo:** `miniJWS-core/src/main/java/.../primitives/ContentType.java`
 
-Maps MIME types to an enum with extension-based lookup.
+Mapea tipos MIME a un enum con búsqueda por extensión.
 
-### Enum Values
+### Valores del Enum
 
-| Constant | MIME Type |
-|----------|-----------|
-| `FILE` | `application/octet-stream` |
-| `JSON` | `application/json;charset=utf-8` |
-| `CSS` | `text/css;charset=utf-8` |
-| `JS` | `text/javascript;charset=utf-8` |
-| `HTML` | `text/html;charset=utf-8` |
-| `XML` | `text/xml;charset=utf-8` |
-| `TEXT` | `text/plain;charset=utf-8` |
-| `SVG` | `image/svg+xml` |
-| `ICO` | `image/x-icon` |
-| `PNG` | `image/png` |
-| `JPEG` | `image/jpeg` |
-| `GIF` | `image/gif` |
-| `WEBP` | `image/webp` |
-| `MP4` | `video/mp4` |
-| `WEBM` | `video/webm` |
-| `WOFF2` | `font/woff2` |
-| `TTF` | `font/ttf` |
-| `PDF` | `application/pdf` |
-| `ZIP` | `application/zip` |
+| Constante | Tipo MIME                        |
+|-----------|----------------------------------|
+| `FILE`    | `application/octet-stream`       |
+| `JSON`    | `application/json;charset=utf-8` |
+| `CSS`     | `text/css;charset=utf-8`         |
+| `JS`      | `text/javascript;charset=utf-8`  |
+| `HTML`    | `text/html;charset=utf-8`        |
+| `XML`     | `text/xml;charset=utf-8`         |
+| `TEXT`    | `text/plain;charset=utf-8`       |
+| `SVG`     | `image/svg+xml`                  |
+| `ICO`     | `image/x-icon`                   |
+| `PNG`     | `image/png`                      |
+| `JPEG`    | `image/jpeg`                     |
+| `GIF`     | `image/gif`                      |
+| `WEBP`    | `image/webp`                     |
+| `MP4`     | `video/mp4`                      |
+| `WEBM`    | `video/webm`                     |
+| `WOFF2`   | `font/woff2`                     |
+| `TTF`     | `font/ttf`                       |
+| `PDF`     | `application/pdf`                |
+| `ZIP`     | `application/zip`                |
 
-### EXT_MAP (Extension Aliases)
+### EXT_MAP (Alias de Extensiones)
 
 ```java
-EXT_MAP.put("jpg", JPEG);    // enum is "JPEG", extension "jpg"
+EXT_MAP.put("jpg", JPEG);    // el enum es "JPEG", la extensión "jpg"
 EXT_MAP.put("jpeg", JPEG);
-EXT_MAP.put("tiff", FILE);   // no TIFF enum, map to generic binary
+EXT_MAP.put("tiff", FILE);   // no hay enum TIFF, mapear a binario genérico
 ```
 
-Built from `name().toLowerCase()` for all enum values, then overrides for aliases.
+Construido desde `name().toLowerCase()` para todos los valores del enum, luego sobrescrituras para alias.
 
-### Key Methods
+### Métodos Clave
 
 ```java
-// Lookup by file extension
+// Búsqueda por extensión de archivo
 ContentType.fromExtension("html") → Optional(HTML)
 ContentType.fromExtension("jpg")  → Optional(JPEG)
 
-// Reverse lookup by MIME string
+// Búsqueda inversa por cadena MIME
 ContentType.fromMime("image/jpeg") → JPEG
 ```
 
 ---
 
-## HttpMethod Enum
+## Enum HttpMethod
 
-**File:** `miniJWS-core/src/main/java/.../primitives/HttpMethod.java`
+**Archivo:** `miniJWS-core/src/main/java/.../primitives/HttpMethod.java`
 
-Standard HTTP methods:
+Métodos HTTP estándar:
 
 ```java
 public enum HttpMethod {
@@ -66,38 +66,38 @@ public enum HttpMethod {
 }
 ```
 
-Used as route key component (`method + ":" + path`) and in `HttpRequest`.
+Usado como componente de clave de ruta (`method + ":" + path`) y en `HttpRequest`.
 
 ---
 
 ## HttpStatusCode
 
-**File:** `miniJWS-core/src/main/java/.../primitives/HttpStatusCode.java`
+**Archivo:** `miniJWS-core/src/main/java/.../primitives/HttpStatusCode.java`
 
-Static mapping of status codes to reason phrases:
+Mapeo estático de códigos de estado a frases de razón:
 
-| Status | Phrase |
-|--------|--------|
-| 100 | CONTINUE |
-| 200 | OK |
-| 204 | NO_CONTENT |
-| 301 | MOVED_PERMANENTLY |
-| 302 | FOUND |
-| 400 | BAD_REQUEST |
-| 401 | UNAUTHORIZED |
-| 403 | FORBIDDEN |
-| 404 | NOT_FOUND |
-| 429 | TOO_MANY_REQUESTS |
-| 500 | INTERNAL_SERVER_ERROR |
-| ... | ... |
+| Estado | Frase                 |
+|--------|-----------------------|
+| 100    | CONTINUE              |
+| 200    | OK                    |
+| 204    | NO_CONTENT            |
+| 301    | MOVED_PERMANENTLY     |
+| 302    | FOUND                 |
+| 400    | BAD_REQUEST           |
+| 401    | UNAUTHORIZED          |
+| 403    | FORBIDDEN             |
+| 404    | NOT_FOUND             |
+| 429    | TOO_MANY_REQUESTS     |
+| 500    | INTERNAL_SERVER_ERROR |
+| ...    | ...                   |
 
-Used by `HttpEncoder` to write the status line: `HTTP/1.1 200 OK\r\n`.
+Usado por `HttpEncoder` para escribir la línea de estado: `HTTP/1.1 200 OK\r\n`.
 
 ---
 
-## RequestRunner Interface
+## Interfaz RequestRunner
 
-**File:** `miniJWS-core/src/main/java/.../primitives/RequestRunner.java`
+**Archivo:** `miniJWS-core/src/main/java/.../primitives/RequestRunner.java`
 
 ```java
 @FunctionalInterface
@@ -106,7 +106,7 @@ public interface RequestRunner {
 }
 ```
 
-Route handlers are `RequestRunner` instances. Typically expressed as lambdas:
+Los manejadores de ruta son instancias de `RequestRunner`. Generalmente se expresan como lambdas:
 
 ```java
 server.addRoute(HttpMethod.GET, "/", req ->
@@ -119,9 +119,9 @@ server.addRoute(HttpMethod.GET, "/", req ->
 
 ---
 
-## Middleware & MiddlewareChain Interfaces
+## Interfaces Middleware y MiddlewareChain
 
-**Files:**
+**Archivos:**
 - `miniJWS-core/src/main/java/.../primitives/Middleware.java`
 - `miniJWS-core/src/main/java/.../primitives/MiddlewareChain.java`
 
@@ -137,66 +137,66 @@ public interface MiddlewareChain {
 }
 ```
 
-`MiddlewareChain` is the "next link" in the chain. A middleware calls `chain.next(request)` to pass control downstream, optionally modifying the request or processing the response on return.
+`MiddlewareChain` es el "siguiente eslabón" de la cadena. Un middleware llama a `chain.next(request)` para pasar el control hacia abajo, modificando opcionalmente la petición o procesando la respuesta al regresar.
 
 ---
 
-## ContentTypes (Extension-to-MIME)
+## ContentTypes (Extensión a MIME)
 
-**File:** `miniJWS-core/src/main/java/.../content/ContentTypes.java`
+**Archivo:** `miniJWS-core/src/main/java/.../content/ContentTypes.java`
 
-Legacy class (included for backward compatibility). Defines a static `Map<String, String>` mapping file extensions to MIME types. Overlaps with `ContentType` enum functionality but provides direct string-based lookups.
+Clase legacy (incluida para compatibilidad hacia atrás). Define un `Map<String, String>` estático que mapea extensiones de archivo a tipos MIME. Se solapa con la funcionalidad del enum `ContentType` pero proporciona búsquedas directas basadas en cadenas.
 
 ---
 
-## Header Parsing Classes
+## Clases de Parseo de Cabeceras
 
 ### Header
-**File:** `miniJWS-core/src/main/java/.../headers/Header.java`
+**Archivo:** `miniJWS-core/src/main/java/.../headers/Header.java`
 
-Model class for HTTP header key-value parsing.
+Clase modelo para el parseo clave-valor de cabeceras HTTP.
 
 ### Field
-**File:** `miniJWS-core/src/main/java/.../headers/Field.java`
+**Archivo:** `miniJWS-core/src/main/java/.../headers/Field.java`
 
-Parser for structured header fields (e.g., `Content-Type: text/html; charset=utf-8`).
+Parser para campos de cabecera estructurados (p.ej., `Content-Type: text/html; charset=utf-8`).
 
 ### Parameter
-**File:** `miniJWS-core/src/main/java/.../headers/Parameter.java`
+**Archivo:** `miniJWS-core/src/main/java/.../headers/Parameter.java`
 
-Parser for header parameters (the `key=value` parts after `;`).
+Parser para parámetros de cabecera (las partes `clave=valor` después de `;`).
 
 ---
 
-## Other Modules
+## Otros Módulos
 
-### miniQR (QR Code Generator)
+### miniQR (Generador de Códigos QR)
 
-**Package:** `io.github.blacknoize404.miniQR`
+**Paquete:** `io.github.blacknoize404.miniQR`
 
-Uses ZXing for QR generation and JFreeSVG for SVG output.
+Usa ZXing para generación de QR y JFreeSVG para salida SVG.
 
-| Method | Description |
+| Método | Descripción |
 |--------|-------------|
-| `generateQRCodeImage(text, size)` | `BufferedImage` via `QRCodeWriter` |
-| `convertToSVG(image, w, h)` | `BufferedImage` → SVG string via `SVGGraphics2D` |
-| `generateSVG(text, size)` | Direct text-to-SVG (combines the above two) |
+| `generateQRCodeImage(text, size)` | `BufferedImage` mediante `QRCodeWriter` |
+| `convertToSVG(image, w, h)` | `BufferedImage` → cadena SVG mediante `SVGGraphics2D` |
+| `generateSVG(text, size)` | Texto a SVG directo (combina los dos anteriores) |
 
-Error correction: `ErrorCorrectionLevel.L` (low — 7% recovery, max data capacity).
+Corrección de errores: `ErrorCorrectionLevel.L` (bajo — 7% de recuperación, máxima capacidad de datos).
 
-**Dependencies:** `com.google.zxing:core:3.5.3`, `org.jfree:jfreesvg:3.4`
+**Dependencias:** `com.google.zxing:core:3.5.3`, `org.jfree:jfreesvg:3.4`
 
 ---
 
 ### miniStaticServer
 
-**Package:** `io.github.blacknoize404.miniStaticServer`
+**Paquete:** `io.github.blacknoize404.miniStaticServer`
 
-Wraps `HttpServer` for directory-based static file serving with template injection.
+Envuelve `HttpServer` para servir archivos estáticos por directorio con inyección de plantillas.
 
 #### StaticSite
 
-Scans a directory and adds file routes automatically. Supports `{{variable}}` template substitution in HTML files.
+Escanea un directorio y añade rutas de archivo automáticamente. Soporta sustitución de plantillas `{{variable}}` en archivos HTML.
 
 ```java
 StaticSite site = new StaticSite(8080, Path.of("data"));
@@ -207,7 +207,7 @@ site.idle();
 
 #### QrStaticSite
 
-Extends the static file server concept with QR code injection. Replaces `{{placeholder}}` in HTML with inline QR code SVG elements.
+Extiende el concepto del servidor de archivos estáticos con inyección de códigos QR. Reemplaza `{{placeholder}}` en HTML con elementos SVG de código QR en línea.
 
 ```java
 QrStaticSite site = new QrStaticSite(80, Path.of("data"));
@@ -215,17 +215,17 @@ site.addQrPlaceholder("downloadQR", "https://example.com/app.apk", 250);
 site.start();
 ```
 
-**Utility method:** `QrStaticSite.getLocalIp()` — discovers the local network IP via UDP socket to `8.8.8.8:12345`.
+**Método utilitario:** `QrStaticSite.getLocalIp()` — descubre la IP de red local mediante socket UDP a `8.8.8.8:12345`.
 
 ---
 
 ### miniApkReader
 
-**Package:** `io.github.blacknoize404.miniApkReader`
+**Paquete:** `io.github.blacknoize404.miniApkReader`
 
-Android APK metadata extraction.
+Extracción de metadatos de APK Android.
 
-#### ApkInfo Record
+#### Record ApkInfo
 
 ```java
 public record ApkInfo(
@@ -236,7 +236,7 @@ public record ApkInfo(
     String targetSdkVersion,  // 33
     List<String> permissions, // [INTERNET, ...]
     List<String> features,    // [android.hardware.camera, ...]
-    String label,             // "My App"
+    String label,             // "Mi App"
     String icon               // res/mipmap/ic_launcher.png
 ) {}
 ```
@@ -250,37 +250,37 @@ String formatted = ApkReader.printInfo(info);
 
 #### ApkInfoExtractor
 
-CLI wrapper for `ApkReader.read()`:
+Envoltorio CLI para `ApkReader.read()`:
 
 ```bash
 mvn compile exec:java \
   -Dexec.mainClass="io.github.blacknoize404.miniApkReader.ApkInfoExtractor" \
-  -Dexec.args="path/to/app.apk"
+  -Dexec.args="ruta/a/app.apk"
 ```
 
-**Dependency:** `net.dongliu:apk-parser:2.6.10`
+**Dependencia:** `net.dongliu:apk-parser:2.6.10`
 
 ---
 
 ### miniJWS-demo
 
-**Package:** `io.github.blacknoize404.miniJWS.demo`
+**Paquete:** `io.github.blacknoize404.miniJWS.demo`
 
-Comprehensive demo server that exercises all middleware and route types. See [DemoServer.java](../../miniJWS-demo/src/main/java/io/github/blacknoize404/miniJWS/demo/DemoServer.java).
+Servidor de demostración completo que ejercita todos los tipos de middleware y rutas. Ver [DemoServer.java](../../miniJWS-demo/src/main/java/io/github/blacknoize404/miniJWS/demo/DemoServer.java).
 
-| Demo Feature | Description |
-|-------------|-------------|
+| Característica Demo | Descripción |
+|---------------------|-------------|
 | Middleware | AccessLog, CORS (`*`), RateLimit (200/60s) |
-| Static files | `./public` via `addStaticRoute("/*", "./public")` |
-| Path params | `/hello/:name` |
-| Query params | `/hello?name=X` |
-| Body parsing | `POST /api/data` with JSON and form |
+| Archivos estáticos | `./public` mediante `addStaticRoute("/*", "./public")` |
+| Parámetros de ruta | `/hello/:name` |
+| Parámetros de query | `/hello?name=X` |
+| Parseo de cuerpo | `POST /api/data` con JSON y formulario |
 | Cookies | `/set-cookie`, `/get-cookies` |
-| Redirect | `/old-path` → 301 → `/new-path` |
-| Echo | `/echo` shows all request details |
-| Keep-alive | Default (HTTP/1.1) |
+| Redirección | `/old-path` → 301 → `/new-path` |
+| Echo | `/echo` muestra todos los detalles de la petición |
+| Keep-alive | Por defecto (HTTP/1.1) |
 
 ---
 
-[← Previous](classes-middleware.md) · [Next →](java-api/index.md)  
-[🇪🇸 Español](classes-support.md) · [🇬🇧 English](classes-support.md)
+[← Anterior](classes-middleware.md) · [Siguiente →](java-api/index.md)  
+[🇪🇸 Español](classes-support.md) · [🇬🇧 English](classes-support.en.md)

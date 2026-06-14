@@ -297,4 +297,4 @@ Collections.unmodifiableList(list)  // vista inmutable
 ---
 
 [← Anterior](oop.md) · [Siguiente →](concurrency.md)  
-[🇪🇸 Español](generics-collections.md)
+[🇪🇸 Español](generics-collections.md) · [🇬🇧 English](generics-collections.en.md)

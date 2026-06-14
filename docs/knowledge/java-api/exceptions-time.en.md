@@ -1,20 +1,20 @@
 # Exceptions & Time API
 
-## Excepciones
+## Exceptions
 
-### Jerarquía de Excepciones
+### Exception Hierarchy
 
 ```
 Throwable
-├── Error               (errores graves, no recuperables)
+├── Error               (serious errors, not recoverable)
 │   └── OutOfMemoryError, StackOverflowError, ...
-└── Exception           (recuperables)
-    ├── RuntimeException (unchecked — no obligatorio capturar)
+└── Exception           (recoverable)
+    ├── RuntimeException (unchecked — not mandatory to catch)
     │   ├── IllegalArgumentException
     │   ├── NullPointerException
     │   ├── IllegalStateException
     │   └── NumberFormatException
-    └── (checked — obligatorio capturar o declarar throws)
+    └── (checked — mandatory to catch or declare throws)
         ├── IOException
         │   ├── EOFException
         │   ├── FileNotFoundException
@@ -25,22 +25,22 @@ Throwable
 
 ### Checked vs Unchecked
 
-**Checked:** El compilador obliga a capturarlas (try-catch) o declararlas (`throws`).
+**Checked:** The compiler forces you to catch them (try-catch) or declare them (`throws`).
 
 ```java
 public static ApkInfo read(Path apkPath) throws IOException { ... }
-// Quien llama debe capturar IOException.
+// Caller must catch IOException.
 
 server.addRoute(HttpMethod.POST, "/api/data", req -> {
     try {
-        // código que lanza excepción checked
+        // code that throws a checked exception
     } catch (IOException e) {
         return errorResponse;
     }
 });
 ```
 
-**Unchecked (RuntimeException):** No obligatorio capturar. Se usan para errores de programación.
+**Unchecked (RuntimeException):** Not mandatory to catch. Used for programming errors.
 
 ```java
 throw new IllegalArgumentException("Not a directory: " + rootDirectory);
@@ -49,7 +49,7 @@ throw new IllegalStateException("CORS: Cannot set allowCredentials(true) with al
 
 ### IOException
 
-Excepción checked para operaciones de I/O fallidas.
+Checked exception for failed I/O operations.
 
 ```java
 try (ApkFile apkFile = new ApkFile(apkPath.toFile())) {
@@ -61,7 +61,7 @@ try (ApkFile apkFile = new ApkFile(apkPath.toFile())) {
 
 ### EOFException
 
-Subclase de `IOException` — se alcanzó el fin del archivo inesperadamente.
+Subclass of `IOException` — end of file reached unexpectedly.
 
 ```java
 if (read == -1) throw new EOFException("Unexpected EOF");
@@ -69,25 +69,25 @@ if (read == -1) throw new EOFException("Unexpected EOF");
 
 ### NoSuchFileException
 
-Subclase de `IOException` — el archivo no existe.
+Subclass of `IOException` — the file does not exist.
 
 ```java
 try {
     byte[] data = Files.readAllBytes(file.toPath());
 } catch (NoSuchFileException e) {
-    // archivo no encontrado → 404
+    // file not found → 404
 }
 ```
 
 ### InterruptedException
 
-Se lanza cuando un hilo es interrumpido mientras espera/bloquea.
+Thrown when a thread is interrupted while waiting/blocking.
 
 ```java
 try {
     shutdownLatch.await();
 } catch (InterruptedException e) {
-    Thread.currentThread().interrupt();  // restaurar flag de interrupción
+    Thread.currentThread().interrupt();  // restore interrupt flag
 }
 
 try {
@@ -98,11 +98,11 @@ try {
 }
 ```
 
-**Buena práctica:** siempre restaurar el flag de interrupción con `Thread.currentThread().interrupt()`.
+**Good practice:** always restore the interrupt flag with `Thread.currentThread().interrupt()`.
 
 ### NumberFormatException
 
-RuntimeException — formato numérico inválido.
+RuntimeException — invalid numeric format.
 
 ```java
 try {
@@ -120,7 +120,7 @@ try {
 
 ### IllegalArgumentException
 
-RuntimeException — argumento inválido.
+RuntimeException — invalid argument.
 
 ```java
 if (!rootDirectory.toFile().isDirectory()) {
@@ -130,7 +130,7 @@ if (!rootDirectory.toFile().isDirectory()) {
 
 ### IllegalStateException
 
-RuntimeException — estado inválido del objeto.
+RuntimeException — invalid object state.
 
 ```java
 if (allow && "*".equals(allowOrigin)) {
@@ -141,7 +141,7 @@ if (allow && "*".equals(allowOrigin)) {
 
 ### WriterException (ZXing)
 
-Checked exception de la librería ZXing — error generando código QR.
+Checked exception from the ZXing library — error generating QR code.
 
 ```java
 try {
@@ -153,7 +153,7 @@ try {
 
 ### Try-With-Resources
 
-Cierra automáticamente `AutoCloseable`:
+Automatically closes `AutoCloseable`:
 
 ```java
 try (Socket s = client;
@@ -167,7 +167,7 @@ try (Socket s = client;
 
 ### Multi-Catch (Java 7+)
 
-Captura múltiples excepciones en un solo catch:
+Catch multiple exceptions in a single catch:
 
 ```java
 catch (IOException | URISyntaxException e) {
@@ -175,22 +175,22 @@ catch (IOException | URISyntaxException e) {
 }
 ```
 
-### Throws en Firma de Método
+### Throws in Method Signature
 
 ```java
 public HttpServer(int port, int parallelism) throws IOException {
-    this.socket = new ServerSocket(port);  // puede lanzar IOException
+    this.socket = new ServerSocket(port);  // may throw IOException
 }
 
 public static ApkInfo read(Path apkPath) throws IOException { ... }
 ```
 
-### Finally (no usado directamente, pero relevante)
+### Finally (not used directly, but relevant)
 
-`finally` se ejecuta siempre, haya excepción o no. El try-with-resources reemplaza `finally` para cerrar recursos.
+`finally` always executes, whether an exception occurs or not. Try-with-resources replaces `finally` for closing resources.
 
 ```java
-// Antes de try-with-resources:
+// Before try-with-resources:
 InputStream in = null;
 try {
     in = new FileInputStream("file.txt");
@@ -204,41 +204,41 @@ try {
 
 ## Time API (java.time — Java 8+)
 
-API moderna y completa para trabajar con fechas, horas, instantes y duraciones.
+Modern and comprehensive API for working with dates, times, instants and durations.
 
 ### Instant
 
-Un instante en la línea de tiempo (epoch: 1970-01-01T00:00:00Z).
+An instant on the timeline (epoch: 1970-01-01T00:00:00Z).
 
 ```java
-Instant now = Instant.now();          // momento actual (UTC)
-Instant cutoff = now.minus(window);   // ahora - duración
-timestamps.peek().isBefore(cutoff);   // comparación temporal
+Instant now = Instant.now();          // current moment (UTC)
+Instant cutoff = now.minus(window);   // now - duration
+timestamps.peek().isBefore(cutoff);   // temporal comparison
 ```
 
-**Usos:**
-- Marcar timestamps de requests (RateLimitMiddleware)
-- Calcular ventanas de tiempo deslizantes
+**Uses:**
+- Marking request timestamps (RateLimitMiddleware)
+- Calculating sliding time windows
 
 ### Duration
 
-Cantidad de tiempo en nanosegundos.
+Amount of time in nanoseconds.
 
 ```java
-Duration window = Duration.ofSeconds(windowSeconds);  // ej: 60 segundos
+Duration window = Duration.ofSeconds(windowSeconds);  // e.g.: 60 seconds
 ```
 
-**Métodos:**
+**Methods:**
 ```java
-window.toSeconds();     // duración en segundos
-now.minus(window);      // resta duración a un Instant
+window.toSeconds();     // duration in seconds
+now.minus(window);      // subtracts duration from an Instant
 ```
 
-**Usos:** Ventana de rate limiting, timeouts.
+**Uses:** Rate limiting window, timeouts.
 
 ### ZonedDateTime
 
-Fecha y hora con zona horaria.
+Date and time with time zone.
 
 ```java
 ZonedDateTime.now(ZoneOffset.UTC)
@@ -246,7 +246,7 @@ ZonedDateTime.now(ZoneOffset.UTC)
 
 ### ZoneOffset
 
-Desplazamiento desde UTC.
+Offset from UTC.
 
 ```java
 ZoneOffset.UTC  // +00:00
@@ -254,73 +254,73 @@ ZoneOffset.UTC  // +00:00
 
 ### DateTimeFormatter
 
-Formateo y parseo de fechas.
+Date formatting and parsing.
 
 ```java
 private static final DateTimeFormatter DATE_FMT =
     DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z", Locale.US);
-// Formato: "13/Jun/2026:14:30:00 +0000"
+// Format: "13/Jun/2026:14:30:00 +0000"
 
-// Uso:
+// Usage:
 ZonedDateTime.now(ZoneOffset.UTC).format(DATE_FMT)
 ```
 
-**Patrones comunes:**
-| Patrón | Significado | Ejemplo |
-|--------|-------------|---------|
-| `dd` | Día (2 dígitos) | `13` |
-| `MMM` | Mes abreviado | `Jun` |
-| `yyyy` | Año 4 dígitos | `2026` |
-| `HH` | Hora (0-23) | `14` |
-| `mm` | Minutos | `30` |
-| `ss` | Segundos | `00` |
-| `Z` | Zona horaria | `+0000` |
-| `z` | Nombre de zona | `UTC` |
+**Common patterns:**
+| Pattern | Meaning | Example |
+|---------|---------|---------|
+| `dd` | Day (2 digits) | `13` |
+| `MMM` | Abbreviated month | `Jun` |
+| `yyyy` | 4-digit year | `2026` |
+| `HH` | Hour (0-23) | `14` |
+| `mm` | Minutes | `30` |
+| `ss` | Seconds | `00` |
+| `Z` | Time zone | `+0000` |
+| `z` | Zone name | `UTC` |
 
 ### RFC_1123_DATE_TIME
 
-Formateador estándar para fechas HTTP (RFC 1123):
+Standard formatter for HTTP dates (RFC 1123):
 
 ```java
 DateTimeFormatter.RFC_1123_DATE_TIME
-// Formato: "Sat, 13 Jun 2026 14:30:00 GMT"
+// Format: "Sat, 13 Jun 2026 14:30:00 GMT"
 ```
 
-**Uso en HttpResponse.Builder:**
+**Usage in HttpResponse.Builder:**
 ```java
 addHeader("Date", ZonedDateTime.now(ZoneOffset.UTC)
     .format(DateTimeFormatter.RFC_1123_DATE_TIME));
 ```
 
-### ChronoUnit (mención)
+### ChronoUnit (mention)
 
-Para conversiones:
+For conversions:
 
 ```java
 long nanos = ChronoUnit.NANOS.between(start, end);
 ```
 
-No usado directamente en el proyecto (se calcula con `System.nanoTime()`).
+Not used directly in the project (calculations use `System.nanoTime()`).
 
 ---
 
 ## System.nanoTime()
 
-Timer de alta precisión (nanosegundos), usado para medir tiempos transcurridos.
+High-precision timer (nanoseconds), used to measure elapsed time.
 
 ```java
-long start = System.nanoTime();       // inicio
-long elapsed = System.nanoTime() - start;  // duración (ns)
-long ms = elapsed / 1_000_000;        // convertir a milisegundos
+long start = System.nanoTime();       // start
+long elapsed = System.nanoTime() - start;  // duration (ns)
+long ms = elapsed / 1_000_000;        // convert to milliseconds
 ```
 
-**No usar** `System.currentTimeMillis()` para medir duraciones cortas — no tiene suficiente precisión y puede saltar por ajustes de reloj.
+**Do not use** `System.currentTimeMillis()` for short duration measurements — it lacks precision and can jump due to clock adjustments.
 
 ---
 
 ## TimeUnit
 
-Conversiones entre unidades de tiempo.
+Conversions between time units.
 
 ```java
 if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -328,9 +328,9 @@ if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
 }
 ```
 
-**Constantes:** `NANOSECONDS`, `MICROSECONDS`, `MILLISECONDS`, `SECONDS`, `MINUTES`, `HOURS`, `DAYS`.
+**Constants:** `NANOSECONDS`, `MICROSECONDS`, `MILLISECONDS`, `SECONDS`, `MINUTES`, `HOURS`, `DAYS`.
 
 ---
 
-[← Anterior](streams-lambdas.md) · [Siguiente →](misc.md)  
+[← Previous](streams-lambdas.en.md) · [Next →](misc.en.md)  
 [🇪🇸 Español](exceptions-time.md) · [🇬🇧 English](exceptions-time.en.md)

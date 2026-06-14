@@ -1,133 +1,133 @@
-# Core Classes
+# Clases del Núcleo
 
 ## HttpServer
 
-**Package:** `io.github.blacknoize404.miniJWS.HttpServer`
-**File:** `miniJWS-core/src/main/java/.../HttpServer.java`
+**Paquete:** `io.github.blacknoize404.miniJWS.HttpServer`
+**Archivo:** `miniJWS-core/src/main/java/.../HttpServer.java`
 
-The central orchestrator. Manages the `ServerSocket`, thread pool, routing table, middleware chain, and connection lifecycle.
+El orquestador central. Gestiona el `ServerSocket`, el pool de hilos, la tabla de rutas, la cadena de middleware y el ciclo de vida de las conexiones.
 
-### Key Fields
+### Campos Clave
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `routes` | `Map<String, RequestRunner>` | `ConcurrentHashMap` — key = `METHOD:/path` |
-| `middlewares` | `List<Middleware>` | `CopyOnWriteArrayList` — thread-safe for read-heavy workloads |
-| `socket` | `ServerSocket` | TCP acceptor |
-| `threadPool` | `ExecutorService` | Fixed thread pool (default: `2 × CPU cores`) |
-| `running` | `AtomicBoolean` | Controls the accept loop |
-| `shutdownLatch` | `CountDownLatch` | Blocks `idle()` until `stop()` fires |
+| Campo | Tipo | Propósito |
+|-------|------|-----------|
+| `routes` | `Map<String, RequestRunner>` | `ConcurrentHashMap` — clave = `MÉTODO:/ruta` |
+| `middlewares` | `List<Middleware>` | `CopyOnWriteArrayList` — seguro para cargas de lectura intensiva |
+| `socket` | `ServerSocket` | Aceptador TCP |
+| `threadPool` | `ExecutorService` | Pool de hilos fijo (por defecto: `2 × núcleos CPU`) |
+| `running` | `AtomicBoolean` | Controla el bucle de aceptación |
+| `shutdownLatch` | `CountDownLatch` | Bloquea `idle()` hasta que `stop()` se dispara |
 
-### Lifecycle
+### Ciclo de Vida
 
-1. **Constructor:** Opens `ServerSocket`, creates thread pool
-2. **Configuration:** `addRoute()`, `addStaticRoute()`, `use()` — all return `this` (fluent)
-3. **`run()`:** Sets `running=true`, registers SIGINT hook, enters accept loop. Each accepted socket is dispatched to `handleConnection()` via the thread pool.
-4. **`stop()`:** Sets `running=false`, counts down the latch, closes the socket
-5. **`idle()`:** Blocks awaiting the latch (for daemon/server mode)
-6. **Shutdown:** `run()` calls `shutdown()` after the accept loop exits, draining the thread pool
+1. **Constructor:** Abre `ServerSocket`, crea el pool de hilos
+2. **Configuración:** `addRoute()`, `addStaticRoute()`, `use()` — todos devuelven `this` (fluido)
+3. **`run()`:** Establece `running=true`, registra el hook SIGINT, entra en el bucle de aceptación. Cada socket aceptado se envía a `handleConnection()` mediante el pool de hilos.
+4. **`stop()`:** Establece `running=false`, decrementa el latch, cierra el socket
+5. **`idle()`:** Bloquea esperando el latch (para modo demonio/servidor)
+6. **Apagado:** `run()` llama a `shutdown()` después de que el bucle de aceptación termina, drenando el pool de hilos
 
-### Keep-Alive Loop (`handleConnection()`)
+### Bucle Keep-Alive (`handleConnection()`)
 
 ```
-accept → for(up to 100 requests):
-           decode(request) → middleware chain → encode(response)
-           if Connection:close or timeout → break
-         close socket
+accept → for(hasta 100 peticiones):
+           decode(request) → cadena de middleware → encode(response)
+           if Connection:close o timeout → break
+         cerrar socket
 ```
 
-### Middleware Chain Construction
+### Construcción de la Cadena de Middleware
 
-The `buildChain()` method creates a nested lambda chain. The last registered middleware runs first (wraps the terminal). The terminal middleware does route matching:
+El método `buildChain()` crea una cadena de lambdas anidadas. El último middleware registrado se ejecuta primero (envuelve el terminal). El middleware terminal hace el emparejamiento de rutas:
 
-1. Exact match (`routes.get(key)`)
-2. Path param match (`findRouteWithParams()` — linear scan of all routes)
+1. Coincidencia exacta (`routes.get(key)`)
+2. Coincidencia por parámetros de ruta (`findRouteWithParams()` — escaneo lineal de todas las rutas)
 3. 404
 
-### Route Matching (`matchPath()`)
+### Emparejamiento de Rutas (`matchPath()`)
 
 ```java
 static Map<String, String> matchPath(String pattern, String path)
 ```
 
-Segment-by-segment comparison:
-- Static segment: must match exactly
-- `:param`: captures the segment into the params map
-- `*`: matches any single segment (no capture)
-- `**`: matches all remaining segments, returns immediately
+Comparación segmento por segmento:
+- Segmento estático: debe coincidir exactamente
+- `:param`: captura el segmento en el mapa de parámetros
+- `*`: coincide con cualquier segmento individual (sin captura)
+- `**`: coincide con todos los segmentos restantes, retorna inmediatamente
 
 ---
 
 ## HttpRequest
 
-**Package:** `io.github.blacknoize404.miniJWS.requests.HttpRequest`
-**File:** `miniJWS-core/src/main/java/.../requests/HttpRequest.java`
+**Paquete:** `io.github.blacknoize404.miniJWS.requests.HttpRequest`
+**Archivo:** `miniJWS-core/src/main/java/.../requests/HttpRequest.java`
 
-Immutable request model built by the `Builder` inner class.
+Modelo de petición inmutable construido por la clase interna `Builder`.
 
-### Fields
+### Campos
 
-| Field | Type | Description |
+| Campo | Tipo | Descripción |
 |-------|------|-------------|
 | `httpMethod` | `HttpMethod` | Enum: GET, POST, etc. |
-| `uri` | `URI` | Parsed URI (path only, query stripped) |
-| `protocolVersion` | `String` | e.g. `HTTP/1.1` |
-| `headers` | `Map<String, List<String>>` | Multi-valued headers (case-sensitive keys as received) |
-| `parameters` | `Map<String, String>` | Merged query + path parameters (path params take precedence) |
-| `cookies` | `Map<String, String>` | Parsed from `Cookie` header at construction time |
-| `body` | `Optional<byte[]>` | Raw body bytes |
+| `uri` | `URI` | URI parseada (solo ruta, query separada) |
+| `protocolVersion` | `String` | p.ej. `HTTP/1.1` |
+| `headers` | `Map<String, List<String>>` | Cabeceras multivalor (claves con su formato original) |
+| `parameters` | `Map<String, String>` | Parámetros de query + ruta combinados (los de ruta tienen prioridad) |
+| `cookies` | `Map<String, String>` | Parseadas de la cabecera `Cookie` en tiempo de construcción |
+| `body` | `Optional<byte[]>` | Bytes del cuerpo en bruto |
 
-### Cookie Parsing
+### Parseo de Cookies
 
-`parseCookies()` runs during construction. It splits the `Cookie` header on `;`, then each pair on `=`:
+`parseCookies()` se ejecuta durante la construcción. Divide la cabecera `Cookie` por `;`, luego cada par por `=`:
 
 ```
 Cookie: session=abc123; token=xyz
 → {session: "abc123", token: "xyz"}
 ```
 
-### Body Parsing Methods
+### Métodos de Parseo del Cuerpo
 
-| Method | Implementation |
-|--------|---------------|
+| Método | Implementación |
+|--------|----------------|
 | `bodyAsString()` | `new String(body, UTF_8)` |
-| `bodyAsForm()` | Splits on `&`, then `=`, URL-decodes each part |
-| `bodyAsJson()` | Hand-written flat JSON parser (no external lib) — key:value pairs split on `,`, handles quoted strings and escaping |
+| `bodyAsForm()` | Divide por `&`, luego `=`, decodifica URL cada parte |
+| `bodyAsJson()` | Parser JSON plano escrito a mano (sin librería externa) — pares clave:valor separados por `,`, maneja cadenas escapadas y entrecomilladas |
 
-The JSON parser is intentionally **flat** — it only handles one level of `{"key": "value", ...}`. Nested objects or arrays are skipped (depth tracking skips content inside `{}` and `[]`).
+El parser JSON es intencionadamente **plano** — solo maneja un nivel de `{"clave": "valor", ...}`. Los objetos o arrays anidados se saltan (el seguimiento de profundidad omite contenido dentro de `{}` y `[]`).
 
 ---
 
 ## HttpResponse
 
-**Package:** `io.github.blacknoize404.miniJWS.responses.HttpResponse`
-**File:** `miniJWS-core/src/main/java/.../responses/HttpResponse.java`
+**Paquete:** `io.github.blacknoize404.miniJWS.responses.HttpResponse`
+**Archivo:** `miniJWS-core/src/main/java/.../responses/HttpResponse.java`
 
-Immutable response model built by the `Builder` inner class.
+Modelo de respuesta inmutable construido por la clase interna `Builder`.
 
-### Default Headers
+### Cabeceras por Defecto
 
-Every response automatically includes:
-- `Server: MiniJWS` (from `HttpServer.SERVER_NAME`)
-- `Date: <RFC 1123 timestamp>` (generated at build time)
+Toda respuesta incluye automáticamente:
+- `Server: MiniJWS` (de `HttpServer.SERVER_NAME`)
+- `Date: <marca temporal RFC 1123>` (generada en tiempo de construcción)
 
-### Redirect Factory
+### Factoría de Redirección
 
 ```java
 HttpResponse.redirect("/login");         // 302 Found
 HttpResponse.redirect("/new-url", 301);  // 301 Moved Permanently
 ```
 
-Both build a response with `Location` header and no body.
+Ambos construyen una respuesta con cabecera `Location` y sin cuerpo.
 
-### Cookie Support
+### Soporte de Cookies
 
 ```java
 builder.setCookie("name", "value");                         // simple
-builder.setCookie("name", "value", 3600, "/", true);        // with Max-Age, Path, HttpOnly
+builder.setCookie("name", "value", 3600, "/", true);        // con Max-Age, Path, HttpOnly
 ```
 
-Internally adds a `Set-Cookie` header. The full-featured variant constructs `name=value; Max-Age=3600; Path=/; HttpOnly`.
+Internamente añade una cabecera `Set-Cookie`. La variante completa construye `name=value; Max-Age=3600; Path=/; HttpOnly`.
 
 ### Builder
 
@@ -144,24 +144,24 @@ new HttpResponse.Builder()
 
 ## HttpDecoder
 
-**Package:** `io.github.blacknoize404.miniJWS.requests.HttpDecoder`
-**File:** `miniJWS-core/src/main/java/.../requests/HttpDecoder.java`
+**Paquete:** `io.github.blacknoize404.miniJWS.requests.HttpDecoder`
+**Archivo:** `miniJWS-core/src/main/java/.../requests/HttpDecoder.java`
 
-Static utility class that parses `InputStream → Optional<HttpRequest>`.
+Clase utilitaria estática que parsea `InputStream → Optional<HttpRequest>`.
 
-### Parsing Algorithm
+### Algoritmo de Parseo
 
-1. **Request Line:** `readLine()` → split on space → `HttpMethod`, `URI`, protocol
-2. **Headers:** Loop `readLine()` until empty line. Each line split on `:`. `Content-Length` and `Transfer-Encoding` are tracked during header parsing.
-3. **Obs-fold:** Lines starting with space/tab are continuations of the previous header value.
-4. **Body:**
-   - If `Transfer-Encoding: chunked` → `readChunkedBody()` (parse hex size, strip extensions, read chunk, skip CRLF)
-   - If `Content-Length > 0` → `readExactBody()` (blocking read exact bytes)
-5. **URI:** query portion parsed separately → `parseQueryParams()` with `URLDecoder.decode(UTF_8)`
+1. **Línea de petición:** `readLine()` → dividir por espacio → `HttpMethod`, `URI`, protocolo
+2. **Cabeceras:** Bucle `readLine()` hasta línea vacía. Cada línea se divide por `:`. `Content-Length` y `Transfer-Encoding` se rastrean durante el parseo de cabeceras.
+3. **Obs-fold:** Las líneas que empiezan con espacio/tabulador son continuación del valor de la cabecera anterior.
+4. **Cuerpo:**
+   - Si `Transfer-Encoding: chunked` → `readChunkedBody()` (parsear tamaño hex, quitar extensiones, leer chunk, saltar CRLF)
+   - Si `Content-Length > 0` → `readExactBody()` (lectura bloqueante de bytes exactos)
+5. **URI:** la porción de query se parsea por separado → `parseQueryParams()` con `URLDecoder.decode(UTF_8)`
 
-### readLine() Implementation
+### Implementación de readLine()
 
-Byte-by-byte loop accumulating bytes until `\r\n` is found:
+Bucle byte a byte acumulando bytes hasta encontrar `\r\n`:
 
 ```java
 while ((b = in.read()) != -1) {
@@ -171,60 +171,60 @@ while ((b = in.read()) != -1) {
 }
 ```
 
-Max line length: `8_192` bytes (returns `null` if exceeded).
+Longitud máxima de línea: `8_192` bytes (devuelve `null` si se excede).
 
-### Size Limits
+### Límites de Tamaño
 
-- `MAX_CHUNK_SIZE`: 10 MiB per chunk
-- `MAX_CONTENT_LENGTH`: 50 MiB total body
-- Duplicate `Content-Length` → reject (return empty)
+- `MAX_CHUNK_SIZE`: 10 MiB por chunk
+- `MAX_CONTENT_LENGTH`: 50 MiB total del cuerpo
+- `Content-Length` duplicado → rechazar (devolver vacío)
 
 ---
 
 ## HttpEncoder
 
-**Package:** `io.github.blacknoize404.miniJWS.responses.HttpEncoder`
-**File:** `miniJWS-core/src/main/java/.../responses/HttpEncoder.java`
+**Paquete:** `io.github.blacknoize404.miniJWS.responses.HttpEncoder`
+**Archivo:** `miniJWS-core/src/main/java/.../responses/HttpEncoder.java`
 
-Static utility class that serializes `HttpResponse → OutputStream`.
+Clase utilitaria estática que serializa `HttpResponse → OutputStream`.
 
-### Serialization Order
+### Orden de Serialización
 
-1. Status line: `HTTP/1.1 200 OK\r\n`
-2. All headers: `Key: value\r\n`
-3. Content-Length header (if body present)
-4. Empty line `\r\n`
-5. Body bytes (written directly to `OutputStream`, not through the text writer)
+1. Línea de estado: `HTTP/1.1 200 OK\r\n`
+2. Todas las cabeceras: `Clave: valor\r\n`
+3. Cabecera Content-Length (si hay cuerpo)
+4. Línea vacía `\r\n`
+5. Bytes del cuerpo (escritos directamente al `OutputStream`, no a través del escritor de texto)
 
-**Critical detail:** Headers are written through a `BufferedWriter(OutputStreamWriter(outputStream, US_ASCII))` and flushed before the body is written directly via `outputStream.write(data)`. This prevents the US-ASCII writer from corrupting binary content (gzip, images, UTF-8 multi-byte sequences).
+**Detalle crítico:** Las cabeceras se escriben mediante un `BufferedWriter(OutputStreamWriter(outputStream, US_ASCII))` y se vacían antes de que el cuerpo se escriba directamente vía `outputStream.write(data)`. Esto evita que el escritor US-ASCII corrompa contenido binario (gzip, imágenes, secuencias UTF-8 multibyte).
 
 ---
 
 ## StaticFileHandler
 
-**Package:** `io.github.blacknoize404.miniJWS.handlers.StaticFileHandler`
-**File:** `miniJWS-core/src/main/java/.../handlers/StaticFileHandler.java`
+**Paquete:** `io.github.blacknoize404.miniJWS.handlers.StaticFileHandler`
+**Archivo:** `miniJWS-core/src/main/java/.../handlers/StaticFileHandler.java`
 
-Implements `RequestRunner` to serve files from a directory.
+Implementa `RequestRunner` para servir archivos desde un directorio.
 
-### Security
+### Seguridad
 
-Three-layer path traversal protection:
-1. **String check:** `rawPath.contains("..")` → 400
-2. **Normalize check:** `baseDir.resolve(relative).normalize().startsWith(baseDir)` → 403
-3. **Race condition:** `NoSuchFileException` caught → 404 instead of 500
+Protección de tres capas contra path traversal:
+1. **Verificación de cadena:** `rawPath.contains("..")` → 400
+2. **Verificación de normalización:** `baseDir.resolve(relative).normalize().startsWith(baseDir)` → 403
+3. **Condición de carrera:** `NoSuchFileException` capturada → 404 en lugar de 500
 
-### Features
+### Características
 
-- Directory index files (default: `index.html`, configurable)
-- MIME detection via `ContentType.fromExtension()`
-- Binary file support (raw bytes)
+- Archivos de índice de directorio (por defecto: `index.html`, configurable)
+- Detección MIME mediante `ContentType.fromExtension()`
+- Soporte de archivos binarios (bytes sin procesar)
 
-### File → Content-Type Resolution
+### Resolución Archivo → Content-Type
 
-Uses `ContentType.fromExtension(ext)` which maps file extension to MIME type via the `EXT_MAP` in `ContentType`. Unknown extensions default to `application/octet-stream`.
+Usa `ContentType.fromExtension(ext)` que mapea la extensión del archivo al tipo MIME mediante el `EXT_MAP` en `ContentType`. Las extensiones desconocidas por defecto usan `application/octet-stream`.
 
 ---
 
-[← Previous](decisions.md) · [Next →](classes-middleware.md)  
-[🇪🇸 Español](classes-core.md) · [🇬🇧 English](classes-core.md)
+[← Anterior](decisions.md) · [Siguiente →](classes-middleware.md)  
+[🇪🇸 Español](classes-core.md) · [🇬🇧 English](classes-core.en.md)

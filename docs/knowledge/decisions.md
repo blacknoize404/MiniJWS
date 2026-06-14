@@ -1,51 +1,51 @@
-# Design Decisions
+# Decisiones de Diseño
 
-This document captures the rationale behind key design decisions in MiniJWS.
-
----
-
-## 1. Flat Multi-Module Layout (No Root POM)
-
-**Decision:** Each module (`miniJWS-core`, `miniJWS-demo`, `miniQR`, etc.) is a standalone Maven project with its own `pom.xml`. There is no root POM or `modules/` parent directory.
-
-**Rationale:**
-- Modules can be built independently without a parent aggregator
-- CI pipelines can build only the changed module
-- Each module controls its own version, plugins, and dependencies
-- Simpler IDE import (each module opens as its own project)
-
-**Trade-off:** Build order must be managed manually (`miniJWS-core` → `miniJWS-demo` → `miniQR` → `miniStaticServer` → `miniApkReader`).
+Este documento recoge la justificación detrás de las decisiones clave de diseño en MiniJWS.
 
 ---
 
-## 2. Immutable Request/Response Objects
+## 1. Diseño Plano Multimódulo (Sin POM Raíz)
 
-**Decision:** `HttpRequest` and `HttpResponse` are immutable after construction.
+**Decisión:** Cada módulo (`miniJWS-core`, `miniJWS-demo`, `miniQR`, etc.) es un proyecto Maven independiente con su propio `pom.xml`. No hay un POM raíz ni un directorio `modules/` padre.
 
-**Rationale:**
-- Thread safety without synchronization — requests flow through middleware chains on different threads
-- Predictable behavior — no middleware can modify the request after another middleware has read it
-- Easy to cache or retry
+**Justificación:**
+- Los módulos pueden construirse independientemente sin un agregador padre
+- Los pipelines de CI pueden construir solo el módulo modificado
+- Cada módulo controla su propia versión, plugins y dependencias
+- Importación IDE más simple (cada módulo se abre como su propio proyecto)
 
-**Trade-off:** Copy-on-modify is necessary when middleware needs to alter the request (e.g., `CorsMiddleware` and `findRouteWithParams` build new instances). This allocation cost is acceptable for HTTP workloads.
-
----
-
-## 3. Builder Pattern for HTTP Messages
-
-**Decision:** Use the Builder pattern instead of constructors or setters on mutable objects.
-
-**Rationale:**
-- Optional fields don't require overloaded constructors
-- Fluent chaining improves readability
-- `build()` enforces validation (`Objects.requireNonNull`) at a known point
-- The builder is mutable; the built object is not — clean separation of construction vs. use
+**Compromiso:** El orden de construcción debe gestionarse manualmente (`miniJWS-core` → `miniJWS-demo` → `miniQR` → `miniStaticServer` → `miniApkReader`).
 
 ---
 
-## 4. Middleware as Linked Chain (Wrapping)
+## 2. Objetos de Petición/Respuesta Inmutables
 
-**Decision:** Build the middleware chain by wrapping each middleware around the previous one (last-wrapping-first), rather than iterating an index through a list.
+**Decisión:** `HttpRequest` y `HttpResponse` son inmutables después de la construcción.
+
+**Justificación:**
+- Seguridad para hilos sin sincronización — las peticiones fluyen a través de cadenas de middleware en diferentes hilos
+- Comportamiento predecible — ningún middleware puede modificar la petición después de que otro middleware la haya leído
+- Fácil de cachear o reintentar
+
+**Compromiso:** Copia-al-modificar es necesario cuando el middleware necesita alterar la petición (p.ej., `CorsMiddleware` y `findRouteWithParams` construyen nuevas instancias). Este costo de asignación es aceptable para cargas de trabajo HTTP.
+
+---
+
+## 3. Patrón Builder para Mensajes HTTP
+
+**Decisión:** Usar el patrón Builder en lugar de constructores o setters en objetos mutables.
+
+**Justificación:**
+- Los campos opcionales no requieren constructores sobrecargados
+- El encadenamiento fluido mejora la legibilidad
+- `build()` aplica validación (`Objects.requireNonNull`) en un punto conocido
+- El builder es mutable; el objeto construido no — separación limpia entre construcción y uso
+
+---
+
+## 4. Middleware como Cadena Enlazada (Envoltorio)
+
+**Decisión:** Construir la cadena de middleware envolviendo cada middleware alrededor del anterior (último-envuelve-primero), en lugar de iterar un índice a través de una lista.
 
 ```java
 // buildChain():
@@ -57,147 +57,147 @@ for (int i = middlewares.size() - 1; i >= 0; i--) {
 }
 ```
 
-**Rationale:**
-- No index variable to manage during execution
-- Works naturally with lambdas and closures
-- Middleware can short-circuit by returning without calling `next()`
-- Each middleware decides when/if to call `next()`, enabling pre/post processing
+**Justificación:**
+- Sin variable de índice que gestionar durante la ejecución
+- Funciona naturalmente con lambdas y clausuras
+- El middleware puede cortocircuitar devolviendo sin llamar a `next()`
+- Cada middleware decide cuándo/si llamar a `next()`, permitiendo procesamiento previo/posterior
 
 ---
 
-## 5. Line-by-Line BufferedInputStream Parsing (Not NIO)
+## 5. Parseo Línea por Línea con BufferedInputStream (No NIO)
 
-**Decision:** `HttpDecoder` reads the HTTP request using `BufferedInputStream.readLine()` semantics implemented manually (byte-by-byte), rather than using Java NIO (`ByteBuffer`, `Channel`) or high-level parsers.
+**Decisión:** `HttpDecoder` lee la petición HTTP usando semántica `BufferedInputStream.readLine()` implementada manualmente (byte a byte), en lugar de usar Java NIO (`ByteBuffer`, `Channel`) o parseadores de alto nivel.
 
-**Rationale:**
-- Simple, predictable, blocking semantics
-- No complex buffer management
-- Works correctly with keep-alive sockets (unlike `available()` which returns 0 for rapid pipelined requests)
-- Easy to enforce line length limits and detect malformed input
+**Justificación:**
+- Semántica de bloqueo simple y predecible
+- Sin gestión compleja de búferes
+- Funciona correctamente con sockets keep-alive (a diferencia de `available()` que devuelve 0 para peticiones en pipeline rápido)
+- Fácil de aplicar límites de longitud de línea y detectar entrada malformada
 
-**Trade-off:** Slower than NIO for very high throughput, but adequate for moderate HTTP workloads.
-
----
-
-## 6. Keep-Alive Loop in Connection Handler
-
-**Decision:** The `handleConnection()` method loops over up to 100 requests on the same socket, rather than one request per connection.
-
-**Rationale:**
-- HTTP/1.1 defaults to persistent connections
-- Reduces TCP handshake overhead
-- The same thread handles all requests on one socket, improving locality
-- Respects `Connection: close` and idle timeout
-
-**Implementation details:**
-- 100 max requests per connection (`MAX_KEEPALIVE_REQUESTS`)
-- 10-second socket timeout (`KEEPALIVE_TIMEOUT_MS`)
-- Sets `Connection: keep-alive` or `Connection: close` on each response
-- Exits the loop on malformed requests, timeout, or close header
+**Compromiso:** Más lento que NIO para rendimiento muy alto, pero adecuado para cargas de trabajo HTTP moderadas.
 
 ---
 
-## 7. CopyOnWriteArrayList for Middleware
+## 6. Bucle Keep-Alive en el Manejador de Conexión
 
-**Decision:** `middlewares` field uses `CopyOnWriteArrayList` instead of `ArrayList` or synchronized list.
+**Decisión:** El método `handleConnection()` itera sobre hasta 100 peticiones en el mismo socket, en lugar de una petición por conexión.
 
-**Rationale:**
-- Middleware is typically registered at startup and rarely modified at runtime
-- Read operations vastly outnumber writes once the server is running
-- CopyOnWriteArrayList provides lock-free reads for all middleware evaluations
-- The copy-on-write cost is paid only during `use()` calls, which is negligible
+**Justificación:**
+- HTTP/1.1 usa conexiones persistentes por defecto
+- Reduce la sobrecarga de handshake TCP
+- El mismo hilo maneja todas las peticiones en un socket, mejorando la localidad
+- Respeta `Connection: close` y el tiempo de espera de inactividad
 
----
-
-## 8. CountDownLatch for Graceful Shutdown
-
-**Decision:** Use `CountDownLatch(1)` in `idle()`/`stop()` instead of `wait()`/`notify()`.
-
-**Rationale:**
-- `CountDownLatch` is a modern Java concurrency primitive with clear semantics
-- No risk of missed notifications or spurious wake-ups
-- `idle()` blocks the main thread until `stop()` is called (via SIGINT or programmatic)
-- The latch is one-shot (counts down 1→0), matching the lifecycle
+**Detalles de implementación:**
+- 100 peticiones máximas por conexión (`MAX_KEEPALIVE_REQUESTS`)
+- Timeout de socket de 10 segundos (`KEEPALIVE_TIMEOUT_MS`)
+- Establece `Connection: keep-alive` o `Connection: close` en cada respuesta
+- Sale del bucle en peticiones malformadas, timeout o cabecera de cierre
 
 ---
 
-## 9. Async Logging with BlockingQueue
+## 7. CopyOnWriteArrayList para Middleware
 
-**Decision:** `AccessLogMiddleware` writes logs asynchronously via a `BlockingQueue` and a dedicated daemon thread.
+**Decisión:** El campo `middlewares` usa `CopyOnWriteArrayList` en lugar de `ArrayList` o una lista sincronizada.
 
-**Rationale:**
-- Log I/O (especially to files) can block the request thread
-- The bounded queue (`16_384`) provides backpressure
-- The daemon thread doesn't prevent JVM exit
-- A shutdown hook flushes remaining entries on shutdown
-
----
-
-## 10. Wildcard Routing (`*` and `**`)
-
-**Decision:** Two wildcard levels — `*` for single segment, `**` for all remaining segments.
-
-**Rationale:**
-- `*` maps cleanly to file handlers (`/*` matches any one-level path)
-- `**` is needed for recursive serving (`/assets/**` matches `/assets/css/main.css`)
-- Match order: exact → path params → `*` → `**` — ensures predictable resolution
+**Justificación:**
+- El middleware normalmente se registra al inicio y rara vez se modifica en tiempo de ejecución
+- Las operaciones de lectura superan con creces a las de escritura una vez que el servidor está en ejecución
+- CopyOnWriteArrayList proporciona lecturas sin bloqueo para todas las evaluaciones de middleware
+- El costo de copia-al-escribir se paga solo durante las llamadas `use()`, que es insignificante
 
 ---
 
-## 11. CORS `*` + Credentials Guard
+## 8. CountDownLatch para Apagado Gradual
 
-**Decision:** `allowCredentials(true)` throws `IllegalStateException` if `allowOrigin("*")` is set.
+**Decisión:** Usar `CountDownLatch(1)` en `idle()`/`stop()` en lugar de `wait()`/`notify()`.
 
-**Rationale:**
-- The CORS spec explicitly forbids `Access-Control-Allow-Origin: *` with credentials
-- Enforcing this at configuration time (fail-fast) is better than silently producing invalid CORS headers at runtime
-
----
-
-## 12. Raw Bytes for Body Encoding
-
-**Decision:** `HttpEncoder` writes the body as raw bytes directly to the `OutputStream`, not through the ASCII writer.
-
-**Rationale:**
-- The `BufferedWriter` with `US-ASCII` charset corrupts non-ASCII bytes (multi-byte UTF-8, gzip compressed bytes)
-- Headers are ASCII-safe, but bodies may be arbitrary binary data
-- Solution: write headers through the writer, flush, then write body bytes directly via `outputStream.write(data)`
+**Justificación:**
+- `CountDownLatch` es un primitivo de concurrencia moderno de Java con semántica clara
+- Sin riesgo de notificaciones perdidas o despertares espurios
+- `idle()` bloquea el hilo principal hasta que se llama a `stop()` (mediante SIGINT o programáticamente)
+- El latch es de un solo uso (cuenta regresiva 1→0), coincidiendo con el ciclo de vida
 
 ---
 
-## 13. StaticFileHandler: Defense in Depth
+## 9. Logging Asíncrono con BlockingQueue
 
-**Decision:** Path traversal prevention is implemented at two levels.
+**Decisión:** `AccessLogMiddleware` escribe logs de forma asíncrona mediante una `BlockingQueue` y un hilo daemon dedicado.
 
-**Rationale:**
-- Explicit `..` check in the raw path string
-- `Path.normalize()` + `startsWith(baseDir)` check after resolution
-- `NoSuchFileException` catch for race conditions (file deleted between `isFile()` check and `readAllBytes()`)
-
----
-
-## 14. No External Dependencies for Core
-
-**Decision:** `miniJWS-core` depends only on `org.jetbrains:annotations` (for `@Nullable`/`@NotNull`). The core has zero runtime dependencies.
-
-**Rationale:**
-- Zero-dependency core is easier to audit, embed, and distribute
-- Minimizes classpath conflicts
-- The middleware and handler implementations are optional (included in core for convenience but not as separate libraries)
+**Justificación:**
+- La E/S de log (especialmente a archivos) puede bloquear el hilo de la petición
+- La cola acotada (`16_384`) proporciona contrapresión
+- El hilo daemon no impide la salida de la JVM
+- Un hook de apagado vacía las entradas restantes al cerrar
 
 ---
 
-## 15. Thread Pool: Fixed Size
+## 10. Enrutamiento con Comodines (`*` y `**`)
 
-**Decision:** Use `Executors.newFixedThreadPool()` with `2 * CPU cores` as default.
+**Decisión:** Dos niveles de comodín — `*` para un segmento individual, `**` para todos los segmentos restantes.
 
-**Rationale:**
-- Fixed pool prevents unbounded thread growth under load
-- 2× CPU cores is a good default for I/O-bound HTTP servers
-- The pool size is configurable via the second constructor parameter
-- Shutdown uses `awaitTermination(5s)` before `shutdownNow()`
+**Justificación:**
+- `*` se asigna limpiamente a manejadores de archivo (`/*` coincide con cualquier ruta de un nivel)
+- `**` es necesario para servir recursivamente (`/assets/**` coincide con `/assets/css/main.css`)
+- Orden de coincidencia: exacta → parámetros de ruta → `*` → `**` — asegura resolución predecible
 
 ---
 
-[← Previous](patterns.md) · [Next →](classes-core.md)  
-[🇪🇸 Español](decisions.md) · [🇬🇧 English](decisions.md)
+## 11. Protección CORS `*` + Credenciales
+
+**Decisión:** `allowCredentials(true)` lanza `IllegalStateException` si `allowOrigin("*")` está establecido.
+
+**Justificación:**
+- La especificación CORS prohíbe explícitamente `Access-Control-Allow-Origin: *` con credenciales
+- Aplicar esto en tiempo de configuración (fail-fast) es mejor que producir silenciosamente cabeceras CORS inválidas en tiempo de ejecución
+
+---
+
+## 12. Bytes Sin Procesar para la Codificación del Cuerpo
+
+**Decisión:** `HttpEncoder` escribe el cuerpo como bytes sin procesar directamente al `OutputStream`, no a través del escritor ASCII.
+
+**Justificación:**
+- El `BufferedWriter` con juego de caracteres `US-ASCII` corrompe bytes no ASCII (UTF-8 multibyte, bytes comprimidos gzip)
+- Las cabeceras son seguras en ASCII, pero los cuerpos pueden ser datos binarios arbitrarios
+- Solución: escribir cabeceras a través del escritor, vaciar, luego escribir bytes del cuerpo directamente mediante `outputStream.write(data)`
+
+---
+
+## 13. StaticFileHandler: Defensa en Profundidad
+
+**Decisión:** La prevención de path traversal se implementa en dos niveles.
+
+**Justificación:**
+- Verificación explícita de `..` en la cadena de ruta sin procesar
+- Verificación `Path.normalize()` + `startsWith(baseDir)` después de la resolución
+- Captura de `NoSuchFileException` para condiciones de carrera (archivo eliminado entre la verificación `isFile()` y `readAllBytes()`)
+
+---
+
+## 14. Sin Dependencias Externas para el Núcleo
+
+**Decisión:** `miniJWS-core` depende solo de `org.jetbrains:annotations` (para `@Nullable`/`@NotNull`). El núcleo tiene cero dependencias en tiempo de ejecución.
+
+**Justificación:**
+- El núcleo sin dependencias es más fácil de auditar, incrustar y distribuir
+- Minimiza conflictos de classpath
+- Las implementaciones de middleware y manejadores son opcionales (incluidas en el núcleo por conveniencia pero no como librerías separadas)
+
+---
+
+## 15. Pool de Hilos: Tamaño Fijo
+
+**Decisión:** Usar `Executors.newFixedThreadPool()` con `2 * núcleos de CPU` como valor por defecto.
+
+**Justificación:**
+- El pool fijo evita el crecimiento ilimitado de hilos bajo carga
+- 2× núcleos de CPU es un buen valor por defecto para servidores HTTP con E/S intensiva
+- El tamaño del pool es configurable mediante el segundo parámetro del constructor
+- El apagado usa `awaitTermination(5s)` antes de `shutdownNow()`
+
+---
+
+[← Anterior](patterns.md) · [Siguiente →](classes-core.md)  
+[🇪🇸 Español](decisions.md) · [🇬🇧 English](decisions.en.md)

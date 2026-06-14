@@ -361,4 +361,4 @@ Notar que `System.out` es `PrintStream`, no `PrintWriter`. El wrapper permite us
 ---
 
 [← Anterior](concurrency.md) · [Siguiente →](streams-lambdas.md)  
-[🇪🇸 Español](io-networking.md)
+[🇪🇸 Español](io-networking.md) · [🇬🇧 English](io-networking.en.md)
