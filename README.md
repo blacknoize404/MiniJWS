@@ -4,7 +4,7 @@
 ![Maven 3.8+](https://img.shields.io/badge/Maven-3.8+-C71A36?logo=apachemaven&logoColor=white)
 ![CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey)
 
-English Version [readme.en.md](/readme.en.md)
+English Version [readme.en.md](readme.en.md)
 
 Un framework modular ligero de servidor HTTP en Java construido con Java 25.
 
