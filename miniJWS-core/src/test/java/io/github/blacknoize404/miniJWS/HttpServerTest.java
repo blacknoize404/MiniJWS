@@ -52,6 +52,19 @@ class HttpServerTest {
     }
 
     @Test
+    void specificity_ordersLiteralParamStarDoubleStar() {
+        assertTrue(HttpServer.specificity("/users/list") > HttpServer.specificity("/users/:id"));
+        assertTrue(HttpServer.specificity("/users/:id") > HttpServer.specificity("/users/*"));
+        assertTrue(HttpServer.specificity("/users/*") > HttpServer.specificity("/users/**"));
+    }
+
+    @Test
+    void specificity_paramRouteBeatsCatchAll() {
+        assertTrue(HttpServer.specificity("/hello/:name") > HttpServer.specificity("/**"));
+        assertTrue(HttpServer.specificity("/static/css") > HttpServer.specificity("/static/**"));
+    }
+
+    @Test
     void addRoute_thenRemoveRoute_removesIt() throws Exception {
         var server = new HttpServer(0);
         server.addRoute(HttpMethod.GET, "/test", req ->

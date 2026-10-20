@@ -214,6 +214,11 @@ public final class HttpServer {
     private RequestRunner findRouteWithParams(HttpMethod method, String path, HttpRequest original) {
         String normalized = normalizePath(path);
 
+        Map.Entry<String, RequestRunner> best = null;
+        Map<String, String> bestParams = null;
+        String bestPattern = null;
+        int bestScore = -1;
+
         for (var entry : routes.entrySet()) {
             String[] entryParts = entry.getKey().split(":", 2);
             if (entryParts.length != 2) continue;
@@ -221,29 +226,50 @@ public final class HttpServer {
 
             String pattern = entryParts[1];
             Map<String, String> params = matchPath(pattern, normalized);
-            if (params != null) {
-                Map<String, String> merged = new HashMap<>(original.getParameters());
-                merged.putAll(params);
+            if (params == null) continue;
 
-                var headersCopy = new LinkedHashMap<String, List<String>>();
-                for (var h : original.getHeaders().entrySet()) {
-                    headersCopy.put(h.getKey(), List.copyOf(h.getValue()));
-                }
-
-                HttpRequest modified = new HttpRequest.Builder()
-                        .setHttpMethod(original.getHttpMethod())
-                        .setUri(original.getUri())
-                        .setProtocolVersion(original.getProtocolVersion())
-                        .setHeaders(headersCopy)
-                        .setParameters(merged)
-                        .setBody(original.getBody().orElse(null))
-                        .build();
-
-                RequestRunner runner = entry.getValue();
-                return req -> runner.run(modified);
+            int score = specificity(pattern);
+            if (best == null || score > bestScore
+                    || (score == bestScore && pattern.compareTo(bestPattern) < 0)) {
+                best = entry;
+                bestParams = params;
+                bestPattern = pattern;
+                bestScore = score;
             }
         }
-        return null;
+
+        if (best == null) return null;
+
+        Map<String, String> merged = new HashMap<>(original.getParameters());
+        merged.putAll(bestParams);
+
+        var headersCopy = new LinkedHashMap<String, List<String>>();
+        for (var h : original.getHeaders().entrySet()) {
+            headersCopy.put(h.getKey(), List.copyOf(h.getValue()));
+        }
+
+        HttpRequest modified = new HttpRequest.Builder()
+                .setHttpMethod(original.getHttpMethod())
+                .setUri(original.getUri())
+                .setProtocolVersion(original.getProtocolVersion())
+                .setHeaders(headersCopy)
+                .setParameters(merged)
+                .setBody(original.getBody().orElse(null))
+                .build();
+
+        RequestRunner runner = best.getValue();
+        return req -> runner.run(modified);
+    }
+
+    static int specificity(String pattern) {
+        int score = 0;
+        for (String segment : pattern.split("/")) {
+            if (segment.equals("**")) score += 0;
+            else if (segment.equals("*")) score += 1;
+            else if (segment.startsWith(":")) score += 2;
+            else if (!segment.isEmpty()) score += 3;
+        }
+        return score;
     }
 
     static Map<String, String> matchPath(String pattern, String path) {
