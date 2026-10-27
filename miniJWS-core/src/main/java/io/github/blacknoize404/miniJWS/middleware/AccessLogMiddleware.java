@@ -69,14 +69,24 @@ public final class AccessLogMiddleware implements Middleware {
         long ms = elapsedNanos / 1_000_000;
 
         return String.format(Locale.US, "%s - - [%s] \"%s %s %s\" %d %d (%dms)",
-                remoteAddr,
+                sanitize(remoteAddr),
                 ZonedDateTime.now(ZoneOffset.UTC).format(DATE_FMT),
                 method,
-                path,
-                request.getProtocolVersion(),
+                sanitize(path),
+                sanitize(request.getProtocolVersion()),
                 status,
                 bodySize,
                 ms);
+    }
+
+    private static String sanitize(String value) {
+        if (value == null || value.isEmpty()) return "-";
+        var sb = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            sb.append(Character.isWhitespace(c) || c == '"' || c == '\\' ? '_' : c);
+        }
+        return sb.toString();
     }
 
     private void drainTo(PrintWriter writer) {

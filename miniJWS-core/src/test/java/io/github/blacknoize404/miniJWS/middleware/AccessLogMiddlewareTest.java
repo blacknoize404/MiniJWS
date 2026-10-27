@@ -55,6 +55,24 @@ class AccessLogMiddlewareTest {
     }
 
     @Test
+    void run_maliciousXForwardedFor_staysOnOneLine() throws Exception {
+        var sw = new StringWriter();
+        var pw = new PrintWriter(sw, true);
+        var mw = new AccessLogMiddleware(pw);
+        var req = new HttpRequest.Builder()
+            .setHttpMethod(HttpMethod.GET)
+            .setUri(URI.create("/proxy"))
+            .setProtocolVersion("HTTP/1.1")
+            .setHeaders(Map.of("X-Forwarded-For", List.of("evil\"\r\nFAKE LOG LINE")))
+            .build();
+        mw.run(req, okChain);
+        Thread.sleep(100);
+        var log = sw.toString();
+        assertEquals(1, log.lines().count());
+        assertTrue(log.contains("evil___FAKE_LOG_LINE"));
+    }
+
+    @Test
     void run_logsResponseBodySize() throws Exception {
         var sw = new StringWriter();
         var pw = new PrintWriter(sw, true);
