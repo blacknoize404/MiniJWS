@@ -34,11 +34,6 @@ class RateLimitMiddlewareTest {
             .setRemoteAddress(remote)
             .setHeaders(Map.of("X-Forwarded-For", List.of(xff)))
             .build();
-            .setHttpMethod(HttpMethod.GET)
-            .setUri(URI.create("/test"))
-            .setProtocolVersion("HTTP/1.1");
-        if (ip != null) builder.setRemoteAddress(ip);
-        return builder.build();
     }
 
     @Test
@@ -91,16 +86,6 @@ class RateLimitMiddlewareTest {
         var mw = new RateLimitMiddleware(1, 60);
         assertEquals(200, mw.run(requestWithXff("10.0.0.6", "1.1.1.1"), okChain).getStatusCode());
         assertEquals(429, mw.run(requestWithXff("10.0.0.6", "2.2.2.2"), okChain).getStatusCode());
-        var a = new HttpRequest.Builder()
-            .setHttpMethod(HttpMethod.GET).setUri(URI.create("/test")).setProtocolVersion("HTTP/1.1")
-            .setRemoteAddress("10.0.0.6")
-            .setHeaders(Map.of("X-Forwarded-For", List.of("1.1.1.1"))).build();
-        var b = new HttpRequest.Builder()
-            .setHttpMethod(HttpMethod.GET).setUri(URI.create("/test")).setProtocolVersion("HTTP/1.1")
-            .setRemoteAddress("10.0.0.6")
-            .setHeaders(Map.of("X-Forwarded-For", List.of("2.2.2.2"))).build();
-        assertEquals(200, mw.run(a, okChain).getStatusCode());
-        assertEquals(429, mw.run(b, okChain).getStatusCode());
     }
 
     @Test
@@ -108,16 +93,6 @@ class RateLimitMiddlewareTest {
         var mw = new RateLimitMiddleware(1, 60, true);
         assertEquals(200, mw.run(requestWithXff("10.0.0.7", "1.1.1.1"), okChain).getStatusCode());
         assertEquals(200, mw.run(requestWithXff("10.0.0.7", "2.2.2.2"), okChain).getStatusCode());
-        var a = new HttpRequest.Builder()
-            .setHttpMethod(HttpMethod.GET).setUri(URI.create("/test")).setProtocolVersion("HTTP/1.1")
-            .setRemoteAddress("10.0.0.7")
-            .setHeaders(Map.of("X-Forwarded-For", List.of("1.1.1.1"))).build();
-        var b = new HttpRequest.Builder()
-            .setHttpMethod(HttpMethod.GET).setUri(URI.create("/test")).setProtocolVersion("HTTP/1.1")
-            .setRemoteAddress("10.0.0.7")
-            .setHeaders(Map.of("X-Forwarded-For", List.of("2.2.2.2"))).build();
-        assertEquals(200, mw.run(a, okChain).getStatusCode());
-        assertEquals(200, mw.run(b, okChain).getStatusCode());
     }
 
     @Test

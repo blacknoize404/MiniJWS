@@ -116,9 +116,6 @@ class HttpResponseTest {
             new HttpResponse.Builder().setCookie("session", "a; Secure"));
         assertThrows(IllegalArgumentException.class, () ->
             new HttpResponse.Builder().setCookie("ses=sion", "abc"));
-            HttpResponse.redirect("/ok\r\nInjected: 1"));
-        assertThrows(IllegalArgumentException.class, () ->
-            new HttpResponse.Builder().setCookie("session", "a\r\nInjected: 1"));
     }
 
     @Test

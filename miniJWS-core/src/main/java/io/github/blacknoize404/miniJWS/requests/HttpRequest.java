@@ -43,17 +43,6 @@ public class HttpRequest {
         return normalized;
     }
 
-    private static Map<String, List<String>> normalizeHeaders(Map<String, List<String>> headers) {
-        Map<String, List<String>> normalized = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        if (headers != null) {
-            headers.forEach((k, v) -> normalized.merge(k, new ArrayList<>(v), (a, b) -> {
-                a.addAll(b);
-                return a;
-            }));
-        }
-        return normalized;
-    }
-
     public URI getUri() { return uri; }
     public HttpMethod getHttpMethod() { return httpMethod; }
     public Map<String, List<String>> getHeaders() { return headers; }
