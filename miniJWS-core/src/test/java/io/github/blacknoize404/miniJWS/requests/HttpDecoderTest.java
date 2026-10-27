@@ -176,6 +176,14 @@ class HttpDecoderTest {
     }
 
     @Test
+    void decode_tooManyHeaders_returnsEmpty() {
+        var sb = new StringBuilder("GET / HTTP/1.1\r\nHost: local\r\n");
+        for (int i = 0; i < 101; i++) sb.append("X-H").append(i).append(": v\r\n");
+        sb.append("\r\n");
+        assertFalse(HttpDecoder.decode(toStream(sb.toString())).isPresent());
+    }
+
+    @Test
     void decode_headerExceedsMaxLength_returnsEmpty() {
         var sb = new StringBuilder("GET / HTTP/1.1\r\nHost: local\r\nX-Long: ");
         sb.append("a".repeat(9000));

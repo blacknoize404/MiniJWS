@@ -32,6 +32,8 @@ public final class HttpServer {
     private final CountDownLatch shutdownLatch = new CountDownLatch(1);
     private final int port;
 
+    private static final int MAX_PENDING_CONNECTIONS = 256;
+
     public HttpServer(int port, int parallelism) throws IOException {
         this.port = port;
         // Virtual threads: parallelism se mantiene por compatibilidad, ya no limita el pool.
@@ -84,7 +86,12 @@ public final class HttpServer {
         while (running.get()) {
             try {
                 Socket client = socket.accept();
-                threadPool.execute(() -> handleConnection(client));
+                try {
+                    threadPool.execute(() -> handleConnection(client));
+                } catch (RejectedExecutionException e) {
+                    System.err.println("[MiniJWS] Connection rejected (pool saturated)");
+                    try { client.close(); } catch (IOException ignored) {}
+                }
             } catch (IOException e) {
                 if (running.get()) {
                     System.err.println("[MiniJWS] Accept error: " + e.getMessage());
