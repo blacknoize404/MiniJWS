@@ -139,6 +139,31 @@ class HttpResponseTest {
     }
 
     @Test
+    void builder_multipleCookies_areAppended() {
+        var res = new HttpResponse.Builder()
+            .setCookie("a", "1")
+            .setCookie("b", "2")
+            .build();
+        assertEquals(List.of("a=1", "b=2"), res.getHeaders().get("Set-Cookie"));
+    }
+
+    @Test
+    void builder_setCookie_withSecureAndSameSite() {
+        var res = new HttpResponse.Builder()
+            .setCookie("token", "xyz", 3600, "/", true, true, "Strict")
+            .build();
+        var cookie = res.getHeaders().get("Set-Cookie").get(0);
+        assertTrue(cookie.contains("; Secure"));
+        assertTrue(cookie.contains("; SameSite=Strict"));
+    }
+
+    @Test
+    void builder_sameSiteNoneWithoutSecure_throws() {
+        assertThrows(IllegalArgumentException.class, () ->
+            new HttpResponse.Builder().setCookie("t", "x", 0, "/", true, false, "None"));
+    }
+
+    @Test
     void builder_setsMethod() {
         var res = new HttpResponse.Builder()
             .setMethod(HttpMethod.POST)

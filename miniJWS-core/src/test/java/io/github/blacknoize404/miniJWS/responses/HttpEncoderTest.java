@@ -80,6 +80,20 @@ class HttpEncoderTest {
     }
 
     @Test
+    void sendResponse_multipleCookies_oneLineEach() {
+        var res = new HttpResponse.Builder()
+            .setCookie("a", "1")
+            .setCookie("b", "2")
+            .build();
+        var out = new ByteArrayOutputStream();
+        HttpEncoder.sendResponse(res, out);
+        var output = out.toString(StandardCharsets.US_ASCII);
+        assertTrue(output.contains("Set-Cookie: a=1\r\n"));
+        assertTrue(output.contains("Set-Cookie: b=2\r\n"));
+        assertFalse(output.contains("Set-Cookie: a=1, b=2"));
+    }
+
+    @Test
     void sendResponse_writesMultipleHeaderValues() {
         var res = new HttpResponse.Builder()
             .addHeader("X-Multi", List.of("a", "b"))

@@ -102,20 +102,45 @@ public class HttpResponse {
             validateCookiePart(name, "name");
             if (name.contains("=")) throw new IllegalArgumentException("Invalid cookie name");
             validateCookiePart(value, "value");
-            return addHeader("Set-Cookie", name + "=" + value);
+            return appendSetCookie(name + "=" + value);
         }
 
         public Builder setCookie(String name, String value, int maxAge, String path, boolean httpOnly) {
+            return setCookie(name, value, maxAge, path, httpOnly, false, null);
+        }
+
+        public Builder setCookie(String name, String value, int maxAge, String path,
+                                  boolean httpOnly, boolean secure, String sameSite) {
             validateCookiePart(name, "name");
             if (name.contains("=")) throw new IllegalArgumentException("Invalid cookie name");
             validateCookiePart(value, "value");
             if (path != null) validateCookiePart(path, "path");
+            if (sameSite != null) {
+                if (!sameSite.equalsIgnoreCase("Lax")
+                        && !sameSite.equalsIgnoreCase("Strict")
+                        && !sameSite.equalsIgnoreCase("None")) {
+                    throw new IllegalArgumentException("Invalid SameSite value: " + sameSite);
+                }
+                if (sameSite.equalsIgnoreCase("None") && !secure) {
+                    throw new IllegalArgumentException("SameSite=None requires Secure");
+                }
+            }
+
             var sb = new StringBuilder();
             sb.append(name).append("=").append(value);
             if (maxAge > 0) sb.append("; Max-Age=").append(maxAge);
             if (path != null) sb.append("; Path=").append(path);
             if (httpOnly) sb.append("; HttpOnly");
-            return addHeader("Set-Cookie", sb.toString());
+            if (secure) sb.append("; Secure");
+            if (sameSite != null) sb.append("; SameSite=").append(sameSite);
+            return appendSetCookie(sb.toString());
+        }
+
+        private Builder appendSetCookie(String cookie) {
+            List<String> cookies = new ArrayList<>(headers.getOrDefault("Set-Cookie", List.of()));
+            cookies.add(cookie);
+            headers.put("Set-Cookie", cookies);
+            return this;
         }
 
         public Builder setBody(String text) {

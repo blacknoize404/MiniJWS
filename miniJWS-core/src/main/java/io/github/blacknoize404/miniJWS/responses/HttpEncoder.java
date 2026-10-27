@@ -20,8 +20,14 @@ public final class HttpEncoder {
 
             for (var entry : response.getHeaders().entrySet()) {
                 String key = entry.getKey();
-                String value = String.join(", ", entry.getValue());
-                writer.write(key + ": " + value + "\r\n");
+                if (key.equalsIgnoreCase("Set-Cookie")) {
+                    // Set-Cookie no se puede unir con comas (Expires las contiene)
+                    for (String value : entry.getValue()) {
+                        writer.write(key + ": " + value + "\r\n");
+                    }
+                } else {
+                    writer.write(key + ": " + String.join(", ", entry.getValue()) + "\r\n");
+                }
             }
 
             if (response.getBody().isEmpty()) {
