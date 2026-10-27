@@ -5,6 +5,7 @@ import io.github.blacknoize404.miniJWS.requests.HttpRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,6 +55,33 @@ class StaticFileHandlerTest {
         var handler = new StaticFileHandler(subdir.toString());
         var response = handler.run(request(HttpMethod.GET, "/../outside.txt"));
         assertEquals(400, response.getStatusCode());
+    }
+
+    @Test
+    void run_symlinkPointingOutside_returns403(@TempDir Path tempDir) throws Exception {
+        var base = tempDir.resolve("base");
+        Files.createDirectories(base);
+        var outside = tempDir.resolve("secret.txt");
+        Files.writeString(outside, "secret");
+        try {
+            Files.createSymbolicLink(base.resolve("link.txt"), outside);
+        } catch (UnsupportedOperationException | IOException | SecurityException e) {
+            org.junit.jupiter.api.Assumptions.assumeTrue(false, "Symlinks no disponibles: " + e);
+        }
+        var handler = new StaticFileHandler(base.toString());
+        var response = handler.run(request(HttpMethod.GET, "/link.txt"));
+        assertEquals(403, response.getStatusCode());
+    }
+
+    @Test
+    void run_oversizedFile_returns413(@TempDir Path tempDir) throws Exception {
+        var big = tempDir.resolve("big.bin");
+        try (var raf = new java.io.RandomAccessFile(big.toFile(), "rw")) {
+            raf.setLength(50L * 1024 * 1024 + 1);
+        }
+        var handler = new StaticFileHandler(tempDir.toString());
+        var response = handler.run(request(HttpMethod.GET, "/big.bin"));
+        assertEquals(413, response.getStatusCode());
     }
 
     @Test

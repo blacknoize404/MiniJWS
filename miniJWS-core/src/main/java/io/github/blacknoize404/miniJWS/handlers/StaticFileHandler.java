@@ -13,6 +13,8 @@ import java.nio.file.Path;
 
 public class StaticFileHandler implements RequestRunner {
 
+    private static final long MAX_FILE_SIZE = 50L * 1024 * 1024;
+
     private final Path baseDir;
     private final String[] indexFiles;
 
@@ -77,7 +79,26 @@ public class StaticFileHandler implements RequestRunner {
 
     private HttpResponse serveFile(File file) {
         try {
-            byte[] data = Files.readAllBytes(file.toPath());
+            // toRealPath resuelve symlinks: un enlace dentro que apunte fuera se rechaza
+            Path realFile = file.toPath().toRealPath();
+            Path realBase = baseDir.toRealPath();
+            if (!realFile.startsWith(realBase)) {
+                return new HttpResponse.Builder()
+                        .setStatusCode(403)
+                        .setContentType(ContentType.TEXT)
+                        .setBody("403 - Forbidden")
+                        .build();
+            }
+
+            if (Files.size(realFile) > MAX_FILE_SIZE) {
+                return new HttpResponse.Builder()
+                        .setStatusCode(413)
+                        .setContentType(ContentType.TEXT)
+                        .setBody("413 - Content Too Large")
+                        .build();
+            }
+
+            byte[] data = Files.readAllBytes(realFile);
             String ext = getExtension(file.getName());
             ContentType contentType = ContentType.fromExtension(ext)
                     .orElse(ContentType.FILE);
