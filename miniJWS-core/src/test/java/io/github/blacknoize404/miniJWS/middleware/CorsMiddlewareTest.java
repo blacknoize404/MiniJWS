@@ -76,6 +76,23 @@ class CorsMiddlewareTest {
     }
 
     @Test
+    void allowOrigin_wildcardAfterCredentials_throws() {
+        assertThrows(IllegalStateException.class, () ->
+            new CorsMiddleware()
+                .allowOrigin("https://example.com")
+                .allowCredentials(true)
+                .allowOrigin("*"));
+    }
+
+    @Test
+    void run_wildcard_doesNotReflectRequestOrigin() {
+        var mw = new CorsMiddleware().allowOrigin("*");
+        var req = requestWithOrigin(HttpMethod.GET, "https://evil.example");
+        var res = mw.run(req, okChain);
+        assertEquals("*", res.getHeaders().get("Access-Control-Allow-Origin").get(0));
+    }
+
+    @Test
     void allowCredentials_withSpecificOrigin_setsHeader() {
         var mw = new CorsMiddleware()
             .allowOrigin("https://example.com")

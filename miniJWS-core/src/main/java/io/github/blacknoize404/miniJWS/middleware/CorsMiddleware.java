@@ -18,6 +18,11 @@ public final class CorsMiddleware implements Middleware {
     private int maxAge = -1;
 
     public CorsMiddleware allowOrigin(String origin) {
+        if ("*".equals(origin) && allowCredentials) {
+            throw new IllegalStateException(
+                    "CORS: Cannot set allowOrigin(\"*\") with allowCredentials(true). " +
+                    "Use allowOrigin(\"https://specific.domain\") instead.");
+        }
         this.allowOrigin = origin;
         return this;
     }
@@ -38,7 +43,7 @@ public final class CorsMiddleware implements Middleware {
         if (allow && "*".equals(allowOrigin)) {
             throw new IllegalStateException(
                     "CORS: Cannot set allowCredentials(true) with allowOrigin(\"*\"). " +
-                    "Use allowOrigin(\"https://specific.domain\") or set credentials first.");
+                    "Use allowOrigin(\"https://specific.domain\") instead.");
         }
         this.allowCredentials = allow;
         return this;
@@ -65,17 +70,15 @@ public final class CorsMiddleware implements Middleware {
         return addCorsHeaders(response, origin);
     }
 
-    private String resolveOrigin(String requestOrigin) {
-        if ("*".equals(allowOrigin) && allowCredentials) {
-            return requestOrigin;
-        }
+    private String resolveOrigin() {
+        // Nunca reflejar el Origin del request: con "*" se devuelve "*".
         return allowOrigin;
     }
 
     private HttpResponse buildPreflightResponse(String origin) {
         var builder = new HttpResponse.Builder()
                 .setStatusCode(204)
-                .addHeader("Access-Control-Allow-Origin", resolveOrigin(origin))
+                .addHeader("Access-Control-Allow-Origin", resolveOrigin())
                 .addHeader("Access-Control-Allow-Methods", String.join(", ", allowMethods))
                 .addHeader("Access-Control-Allow-Headers", String.join(", ", allowHeaders));
 
@@ -99,7 +102,7 @@ public final class CorsMiddleware implements Middleware {
             builder.addHeader(entry.getKey(), entry.getValue());
         }
 
-        builder.addHeader("Access-Control-Allow-Origin", resolveOrigin(origin));
+        builder.addHeader("Access-Control-Allow-Origin", resolveOrigin());
 
         if (allowCredentials) {
             builder.addHeader("Access-Control-Allow-Credentials", "true");
